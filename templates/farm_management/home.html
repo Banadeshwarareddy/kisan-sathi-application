@@ -1,0 +1,1899 @@
+{% extends 'dashboard/base_dashboard.html' %}
+
+{% block page_title %}Farm Management{% endblock %}
+{% block page_subtitle %}Complete farm operations control{% endblock %}
+
+{% block dashboard_content %}
+<div class="max-w-7xl mx-auto space-y-6">
+    {% csrf_token %}
+
+    <!-- Navigation Tabs -->
+    <div class="flex flex-wrap bg-white rounded-xl shadow-sm p-1.5 gap-2 border border-gray-200/60">
+        <button onclick="switchTab('dashboard')" id="tab-btn-dashboard"
+            class="flex-1 min-w-[120px] py-2.5 px-4 text-center rounded-lg text-sm font-semibold transition-all duration-200 text-gray-600 hover:bg-gray-50">
+            Dashboard
+        </button>
+        <button onclick="switchTab('expenses')" id="tab-btn-expenses"
+            class="flex-1 min-w-[120px] py-2.5 px-4 text-center rounded-lg text-sm font-semibold transition-all duration-200 text-gray-600 hover:bg-gray-50">
+            Expenses
+        </button>
+        <button onclick="switchTab('income')" id="tab-btn-income"
+            class="flex-1 min-w-[120px] py-2.5 px-4 text-center rounded-lg text-sm font-semibold transition-all duration-200 text-gray-600 hover:bg-gray-50">
+            Income
+        </button>
+        <button onclick="switchTab('crops')" id="tab-btn-crops"
+            class="flex-1 min-w-[120px] py-2.5 px-4 text-center rounded-lg text-sm font-semibold transition-all duration-200 text-gray-600 hover:bg-gray-50">
+            Crops
+        </button>
+        <button onclick="switchTab('livestock')" id="tab-btn-livestock"
+            class="flex-1 min-w-[120px] py-2.5 px-4 text-center rounded-lg text-sm font-semibold transition-all duration-200 text-gray-600 hover:bg-gray-50">
+            Livestock
+        </button>
+        <button onclick="switchTab('loans')" id="tab-btn-loans"
+            class="flex-1 min-w-[120px] py-2.5 px-4 text-center rounded-lg text-sm font-semibold transition-all duration-200 text-gray-600 hover:bg-gray-50">
+            Loans
+        </button>
+    </div>
+
+    <!-- TAB CONTENTS -->
+
+    <!-- ================= DASHBOARD ================= -->
+    <div id="tab-content-dashboard" class="tab-content hidden space-y-6">
+        <!-- Stat Cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-400 uppercase tracking-wider">Total Income</p>
+                    <p class="text-2xl font-bold text-gray-800 mt-1" id="dash-income">₹0.00</p>
+                </div>
+                <div class="w-12 h-12 bg-green-50 text-green-600 rounded-xl flex items-center justify-center">
+                    <span class="material-symbols-outlined text-2xl">trending_up</span>
+                </div>
+            </div>
+
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-400 uppercase tracking-wider">Total Expenses</p>
+                    <p class="text-2xl font-bold text-gray-800 mt-1" id="dash-expense">₹0.00</p>
+                </div>
+                <div class="w-12 h-12 bg-red-50 text-red-600 rounded-xl flex items-center justify-center">
+                    <span class="material-symbols-outlined text-2xl">trending_down</span>
+                </div>
+            </div>
+
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between"
+                id="dash-profit-card">
+                <div>
+                    <p class="text-sm font-medium text-gray-400 uppercase tracking-wider">Net Profit/Loss</p>
+                    <p class="text-2xl font-bold text-gray-800 mt-1" id="dash-profit">₹0.00</p>
+                </div>
+                <div class="w-12 h-12 bg-purple-50 text-purple-600 rounded-xl flex items-center justify-center"
+                    id="dash-profit-icon-bg">
+                    <span class="material-symbols-outlined text-2xl" id="dash-profit-icon">analytics</span>
+                </div>
+            </div>
+
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-400 uppercase tracking-wider">Active Loans</p>
+                    <p class="text-2xl font-bold text-gray-800 mt-1" id="dash-loans">0</p>
+                </div>
+                <div class="w-12 h-12 bg-amber-50 text-amber-600 rounded-xl flex items-center justify-center">
+                    <span class="material-symbols-outlined text-2xl">account_balance</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Stats Row -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-6">
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 text-center">
+                <p class="text-xs font-semibold text-gray-400 uppercase">Crop Plans</p>
+                <p class="text-2xl font-bold text-gray-700 mt-1" id="dash-crops">0</p>
+            </div>
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 text-center">
+                <p class="text-xs font-semibold text-gray-400 uppercase">Livestock</p>
+                <p class="text-2xl font-bold text-gray-700 mt-1" id="dash-livestock">0</p>
+            </div>
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 text-center">
+                <p class="text-xs font-semibold text-gray-400 uppercase">Expense Records</p>
+                <p class="text-2xl font-bold text-gray-700 mt-1" id="dash-exp-count">0</p>
+            </div>
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 text-center">
+                <p class="text-xs font-semibold text-gray-400 uppercase">Income Records</p>
+                <p class="text-2xl font-bold text-gray-700 mt-1" id="dash-inc-count">0</p>
+            </div>
+        </div>
+
+        <!-- Monthly Profit Trend - PREMIUM FINTECH STYLE -->
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+            <div class="flex justify-between items-center mb-6">
+                <div>
+                    <h3 class="text-lg font-bold text-gray-800">Monthly Profit Trend</h3>
+                    <p class="text-xs text-gray-400 mt-0.5">Overview of income and expenses per month</p>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="downloadFullReport('pdf')"
+                        class="flex items-center gap-1.5 px-3 py-1.5 bg-green-50 text-green-700 hover:bg-green-100 transition rounded-lg text-xs font-semibold border border-green-200">
+                        <span class="material-symbols-outlined text-sm">picture_as_pdf</span>
+                        PDF Report
+                    </button>
+                    <button onclick="downloadFullReport('excel')"
+                        class="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 transition rounded-lg text-xs font-semibold border border-blue-200">
+                        <span class="material-symbols-outlined text-sm">table_view</span>
+                        Excel Report
+                    </button>
+                </div>
+            </div>
+
+            <!-- Premium Compact Monthly Cards -->
+            <div class="space-y-2 max-h-[480px] overflow-y-auto pr-2" id="monthly-bars">
+                <!-- Generated by JS -->
+            </div>
+
+            <div class="flex gap-6 mt-6 pt-4 border-t border-gray-100 justify-center">
+                <span class="flex items-center gap-2 text-xs font-semibold text-gray-600">
+                    <span class="w-3 h-3 bg-green-500 rounded-sm"></span>
+                    Income
+                </span>
+                <span class="flex items-center gap-2 text-xs font-semibold text-gray-600">
+                    <span class="w-3 h-3 bg-red-500 rounded-sm"></span>
+                    Expense
+                </span>
+
+            </div>
+        </div>
+
+        <!-- Breakdown Charts -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                <h3 class="text-lg font-bold text-gray-800 mb-4">Expense Breakdown by Category</h3>
+                <div id="expense-breakdown" class="space-y-4 max-h-[300px] overflow-y-auto pr-2">
+                    <p class="text-center text-gray-400 py-8">No expense data available</p>
+                </div>
+            </div>
+
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                <h3 class="text-lg font-bold text-gray-800 mb-4">Income Breakdown by Crop</h3>
+                <div id="income-breakdown" class="space-y-4 max-h-[300px] overflow-y-auto pr-2">
+                    <p class="text-center text-gray-400 py-8">No income data available</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent sections -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                <h3 class="text-lg font-bold text-gray-800 mb-4">🌾 Recent Crop Plans</h3>
+                <div id="recent-crops" class="divide-y divide-gray-100">
+                    <p class="text-center text-gray-400 py-8">No crop plans yet. Add one in the Crops tab!</p>
+                </div>
+            </div>
+
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                <h3 class="text-lg font-bold text-gray-800 mb-4">🐄 Recent Livestock</h3>
+                <div id="recent-livestock" class="divide-y divide-gray-100">
+                    <p class="text-center text-gray-400 py-8">No livestock records yet. Add one in the Livestock tab!
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= EXPENSES ================= -->
+    <div id="tab-content-expenses" class="tab-content hidden space-y-6">
+        <!-- Stat cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                <p class="text-sm font-medium text-gray-400 uppercase">Total Expenses</p>
+                <p class="text-2xl font-bold text-gray-800 mt-1" id="exp-total">₹0.00</p>
+            </div>
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                <p class="text-sm font-medium text-gray-400 uppercase">Active Records</p>
+                <p class="text-2xl font-bold text-green-600 mt-1" id="exp-active-count">0</p>
+            </div>
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                <p class="text-sm font-medium text-gray-400 uppercase">Deleted Records</p>
+                <p class="text-2xl font-bold text-amber-600 mt-1" id="exp-deleted-count">0</p>
+            </div>
+        </div>
+
+        <!-- Add Expense Form -->
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+            <h3 class="text-lg font-bold text-gray-800 mb-4">Add New Expense</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 uppercase mb-1.5">Category *</label>
+                    <select id="exp-category"
+                        class="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:ring-2 focus:ring-green-100 focus:border-green-600 transition bg-white text-sm">
+                        <option value="">Select category</option>
+                        <option value="seeds">Seeds</option>
+                        <option value="fertilizer">Fertilizer</option>
+                        <option value="pesticide">Pesticide</option>
+                        <option value="irrigation">Irrigation</option>
+                        <option value="labor">Labor</option>
+                        <option value="equipment">Equipment</option>
+                        <option value="fuel">Fuel</option>
+                        <option value="electricity">Electricity</option>
+                        <option value="transport">Transport</option>
+                        <option value="storage">Storage</option>
+                        <option value="maintenance">Maintenance</option>
+                        <option value="veterinary">Veterinary</option>
+                        <option value="feed">Animal Feed</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 uppercase mb-1.5">Amount (₹) *</label>
+                    <input type="number" id="exp-amount" placeholder="Enter amount" step="0.01"
+                        class="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:ring-2 focus:ring-green-100 focus:border-green-600 transition text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 uppercase mb-1.5">Date</label>
+                    <input type="date" id="exp-date"
+                        class="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:ring-2 focus:ring-green-100 focus:border-green-600 transition text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 uppercase mb-1.5">Notes</label>
+                    <input type="text" id="exp-notes" placeholder="Enter notes"
+                        class="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:ring-2 focus:ring-green-100 focus:border-green-600 transition text-sm">
+                </div>
+            </div>
+            <button onclick="addExpense()"
+                class="mt-4 px-6 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-semibold transition shadow-sm">
+                Add Expense
+            </button>
+        </div>
+
+        <!-- Records section -->
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+            <div class="p-6 border-b border-gray-100 flex flex-wrap justify-between items-center gap-4">
+                <div class="flex gap-2">
+                    <button onclick="showExpenseTab('active')" id="exp-active-tab"
+                        class="px-4 py-2 rounded-lg text-xs font-bold bg-green-50 text-green-700 border border-green-200">
+                        📊 Active Expenses
+                        <span class="ml-1 bg-green-600 text-white px-1.5 py-0.5 rounded-full text-[10px]"
+                            id="exp-active-badge">0</span>
+                    </button>
+                    <button onclick="showExpenseTab('history')" id="exp-history-tab"
+                        class="px-4 py-2 rounded-lg text-xs font-bold text-gray-500 hover:bg-gray-50">
+                        📁 History
+                        <span class="ml-1 bg-amber-500 text-white px-1.5 py-0.5 rounded-full text-[10px]"
+                            id="exp-history-badge">0</span>
+                    </button>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="downloadExpenses('pdf')"
+                        class="flex items-center gap-1.5 px-3 py-1.5 bg-green-50 text-green-700 hover:bg-green-100 transition rounded-lg text-xs font-semibold border border-green-200">
+                        <span class="material-symbols-outlined text-sm">picture_as_pdf</span> PDF Report
+                    </button>
+                    <button onclick="downloadExpenses('excel')"
+                        class="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 transition rounded-lg text-xs font-semibold border border-blue-200">
+                        <span class="material-symbols-outlined text-sm">table_view</span> Excel Report
+                    </button>
+                </div>
+            </div>
+
+            <!-- Active expenses table -->
+            <div id="exp-active-content" class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-gray-50 text-gray-400 text-xs font-bold uppercase border-b border-gray-100">
+                            <th class="py-3 px-6">#</th>
+                            <th class="py-3 px-6">Category</th>
+                            <th class="py-3 px-6">Amount</th>
+                            <th class="py-3 px-6">Date</th>
+                            <th class="py-3 px-6">Notes</th>
+                            <th class="py-3 px-6 text-right">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="exp-active-tbody" class="text-sm divide-y divide-gray-100">
+                        <tr>
+                            <td colspan="6" class="text-center text-gray-400 py-8">No expenses recorded yet</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- History/deleted table -->
+            <div id="exp-history-content" class="overflow-x-auto hidden">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-gray-50 text-gray-400 text-xs font-bold uppercase border-b border-gray-100">
+                            <th class="py-3 px-6">#</th>
+                            <th class="py-3 px-6">Category</th>
+                            <th class="py-3 px-6">Amount</th>
+                            <th class="py-3 px-6">Date</th>
+                            <th class="py-3 px-6 text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="exp-history-tbody" class="text-sm divide-y divide-gray-100">
+                        <tr>
+                            <td colspan="6" class="text-center text-gray-400 py-8">No deleted records</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= INCOME ================= -->
+    <div id="tab-content-income" class="tab-content hidden space-y-6">
+        <!-- Stat cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                <p class="text-sm font-medium text-gray-400 uppercase">Total Income</p>
+                <p class="text-2xl font-bold text-gray-800 mt-1" id="inc-total">₹0.00</p>
+            </div>
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                <p class="text-sm font-medium text-gray-400 uppercase">Active Records</p>
+                <p class="text-2xl font-bold text-green-600 mt-1" id="inc-active-count">0</p>
+            </div>
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                <p class="text-sm font-medium text-gray-400 uppercase">Deleted Records</p>
+                <p class="text-2xl font-bold text-amber-600 mt-1" id="inc-deleted-count">0</p>
+            </div>
+        </div>
+
+        <!-- Record Income Form -->
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+            <h3 class="text-lg font-bold text-gray-800 mb-4">Record Income</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 uppercase mb-1.5">Crop *</label>
+                    <select id="inc-crop"
+                        class="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:ring-2 focus:ring-green-100 focus:border-green-600 transition bg-white text-sm">
+                        <option value="">Select crop</option>
+                        <option value="Wheat">Wheat (Gehun)</option>
+                        <option value="Rice">Rice (Dhan)</option>
+                        <option value="Maize">Maize (Makka)</option>
+                        <option value="Cotton">Cotton</option>
+                        <option value="Sugarcane">Sugarcane</option>
+                        <option value="Mustard">Mustard</option>
+                        <option value="Tomato">Tomato</option>
+                        <option value="Potato">Potato</option>
+                        <option value="Onion">Onion</option>
+                        <option value="Soybean">Soybean</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 uppercase mb-1.5">Quantity *</label>
+                    <input type="number" id="inc-qty" placeholder="Enter quantity" step="0.01"
+                        class="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:ring-2 focus:ring-green-100 focus:border-green-600 transition text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 uppercase mb-1.5">Unit *</label>
+                    <select id="inc-unit"
+                        class="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:ring-2 focus:ring-green-100 focus:border-green-600 transition bg-white text-sm">
+                        <option value="kg">Kilogram</option>
+                        <option value="quintal">Quintal</option>
+                        <option value="ton">Ton</option>
+                        <option value="piece">Piece</option>
+                        <option value="dozen">Dozen</option>
+                        <option value="liter">Liter</option>
+                        <option value="bag">Bag</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 uppercase mb-1.5">Rate per Unit (₹) *r</label>
+                    <input type="number" id="inc-rate" placeholder="Enter rate" step="0.01"
+                        class="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:ring-2 focus:ring-green-100 focus:border-green-600 transition text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 uppercase mb-1.5">Buyer Name</label>
+                    <input type="text" id="inc-buyer" placeholder="Enter buyer name"
+                        class="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:ring-2 focus:ring-green-100 focus:border-green-600 transition text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 uppercase mb-1.5">Sale Date</label>
+                    <input type="date" id="inc-date"
+                        class="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:ring-2 focus:ring-green-100 focus:border-green-600 transition text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 uppercase mb-1.5">Payment Status *</label>
+                    <select id="inc-payment"
+                        class="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:ring-2 focus:ring-green-100 focus:border-green-600 transition bg-white text-sm">
+                        <option value="pending">Pending</option>
+                        <option value="received">Received</option>
+                        <option value="partial">Partial</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 uppercase mb-1.5">Notes</label>
+                    <input type="text" id="inc-notes" placeholder="Enter notes"
+                        class="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:ring-2 focus:ring-green-100 focus:border-green-600 transition text-sm">
+                </div>
+            </div>
+            <button onclick="addIncome()"
+                class="mt-4 px-6 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-semibold transition shadow-sm">
+                Record Income
+            </button>
+        </div>
+
+        <!-- Records section -->
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+            <div class="p-6 border-b border-gray-100 flex flex-wrap justify-between items-center gap-4">
+                <div class="flex gap-2">
+                    <button onclick="showIncomeTab('active')" id="inc-active-tab"
+                        class="px-4 py-2 rounded-lg text-xs font-bold bg-green-50 text-green-700 border border-green-200">
+                        📊 Active Income
+                        <span class="ml-1 bg-green-600 text-white px-1.5 py-0.5 rounded-full text-[10px]"
+                            id="inc-active-badge">0</span>
+                    </button>
+                    <button onclick="showIncomeTab('history')" id="inc-history-tab"
+                        class="px-4 py-2 rounded-lg text-xs font-bold text-gray-500 hover:bg-gray-50">
+                        📁 History
+                        <span class="ml-1 bg-amber-500 text-white px-1.5 py-0.5 rounded-full text-[10px]"
+                            id="inc-history-badge">0</span>
+                    </button>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="downloadIncome('pdf')"
+                        class="flex items-center gap-1.5 px-3 py-1.5 bg-green-50 text-green-700 hover:bg-green-100 transition rounded-lg text-xs font-semibold border border-green-200">
+                        <span class="material-symbols-outlined text-sm">picture_as_pdf</span> PDF Report
+                    </button>
+                    <button onclick="downloadIncome('excel')"
+                        class="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 transition rounded-lg text-xs font-semibold border border-blue-200">
+                        <span class="material-symbols-outlined text-sm">table_view</span> Excel Report
+                    </button>
+                </div>
+            </div>
+
+            <!-- Active income table -->
+            <div id="inc-active-content" class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-gray-50 text-gray-400 text-xs font-bold uppercase border-b border-gray-100">
+                            <th class="py-3 px-6">#</th>
+                            <th class="py-3 px-6">Crop</th>
+                            <th class="py-3 px-6">Qty</th>
+                            <th class="py-3 px-6">Total</th>
+                            <th class="py-3 px-6">Buyer</th>
+                            <th class="py-3 px-6">Date</th>
+                            <th class="py-3 px-6">Status</th>
+                            <th class="py-3 px-6 text-right">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="inc-active-tbody" class="text-sm divide-y divide-gray-100">
+                        <tr>
+                            <td colspan="8" class="text-center text-gray-400 py-8">No income recorded yet</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- History/deleted table -->
+            <div id="inc-history-content" class="overflow-x-auto hidden">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-gray-50 text-gray-400 text-xs font-bold uppercase border-b border-gray-100">
+                            <th class="py-3 px-6">#</th>
+                            <th class="py-3 px-6">Crop</th>
+                            <th class="py-3 px-6">Total</th>
+                            <th class="py-3 px-6">Date</th>
+                            <th class="py-3 px-6 text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="inc-history-tbody" class="text-sm divide-y divide-gray-100">
+                        <tr>
+                            <td colspan="6" class="text-center text-gray-400 py-8">No deleted records</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= CROPS ================= -->
+    <div id="tab-content-crops" class="tab-content hidden space-y-6">
+        <!-- Plan New Crop Form -->
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+            <h3 class="text-lg font-bold text-gray-800 mb-4">Plan New Crop</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 uppercase mb-1.5">Crop *</label>
+                    <select id="crop-type"
+                        class="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:ring-2 focus:ring-green-100 focus:border-green-600 transition bg-white text-sm">
+                        <option value="">Select crop</option>
+                        <option value="wheat">Wheat (Gehun)</option>
+                        <option value="rice">Rice (Dhan)</option>
+                        <option value="maize">Maize (Makka)</option>
+                        <option value="cotton">Cotton</option>
+                        <option value="sugarcane">Sugarcane</option>
+                        <option value="mustard">Mustard</option>
+                        <option value="soybean">Soybean</option>
+                        <option value="chickpea">Chickpea</option>
+                        <option value="tomato">Tomato</option>
+                        <option value="potato">Potato</option>
+                        <option value="onion">Onion</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 uppercase mb-1.5">Area (acres) *</label>
+                    <input type="number" id="crop-area" placeholder="Enter area" step="0.01"
+                        class="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:ring-2 focus:ring-green-100 focus:border-green-600 transition text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 uppercase mb-1.5">Planting Date *</label>
+                    <input type="date" id="crop-plant-date"
+                        class="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:ring-2 focus:ring-green-100 focus:border-green-600 transition text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 uppercase mb-1.5">Expected Harvest
+                        Date</label>
+                    <input type="date" id="crop-harvest-date"
+                        class="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:ring-2 focus:ring-green-100 focus:border-green-600 transition text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 uppercase mb-1.5">Estimated Cost (₹)</label>
+                    <input type="number" id="crop-cost" placeholder="Enter estimated cost"
+                        class="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:ring-2 focus:ring-green-100 focus:border-green-600 transition text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 uppercase mb-1.5">Expected Revenue
+                        (₹)</label>
+                    <input type="number" id="crop-revenue" placeholder="Enter expected revenue"
+                        class="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:ring-2 focus:ring-green-100 focus:border-green-600 transition text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 uppercase mb-1.5">Status</label>
+                    <select id="crop-status"
+                        class="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:ring-2 focus:ring-green-100 focus:border-green-600 transition bg-white text-sm">
+                        <option value="planned">Planned</option>
+                        <option value="sowing">Sowing</option>
+                        <option value="growing">Growing</option>
+                        <option value="harvesting">Harvesting</option>
+                        <option value="completed">Completed</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 uppercase mb-1.5">Notes</label>
+                    <input type="text" id="crop-notes" placeholder="Additional notes"
+                        class="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:ring-2 focus:ring-green-100 focus:border-green-600 transition text-sm">
+                </div>
+            </div>
+            <button onclick="addCropPlan()"
+                class="mt-4 px-6 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-semibold transition shadow-sm">
+                Add Crop Plan
+            </button>
+        </div>
+
+        <!-- Crop Plans table -->
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+            <div class="p-6 border-b border-gray-100">
+                <h3 class="text-lg font-bold text-gray-800">Crop Plans</h3>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-gray-50 text-gray-400 text-xs font-bold uppercase border-b border-gray-100">
+                            <th class="py-3 px-6">#</th>
+                            <th class="py-3 px-6">Crop</th>
+                            <th class="py-3 px-6">Area</th>
+                            <th class="py-3 px-6">Planted</th>
+                            <th class="py-3 px-6">Harvest</th>
+                            <th class="py-3 px-6">Cost</th>
+                            <th class="py-3 px-6">Revenue</th>
+                            <th class="py-3 px-6">Status</th>
+                            <th class="py-3 px-6 text-right">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="crops-tbody" class="text-sm divide-y divide-gray-100">
+                        <tr>
+                            <td colspan="9" class="text-center text-gray-400 py-8">No crop plans yet. Add your first
+                                crop plan above!</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= LIVESTOCK ================= -->
+    <div id="tab-content-livestock" class="tab-content hidden space-y-6">
+        <!-- Add Livestock Form -->
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+            <h3 class="text-lg font-bold text-gray-800 mb-4">Add Livestock</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 uppercase mb-1.5">Animal Type *</label>
+                    <select id="live-type"
+                        class="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:ring-2 focus:ring-green-100 focus:border-green-600 transition bg-white text-sm">
+                        <option value="">Select animal type</option>
+                        <option value="cow">Cow (Gaay)</option>
+                        <option value="buffalo">Buffalo (Bhains)</option>
+                        <option value="goat">Goat (Bakri)</option>
+                        <option value="sheep">Sheep (Bhed)</option>
+
+                        <option value="chicken">Chicken (Murgi)</option>
+                        <option value="duck">Duck</option>
+                        <option value="horse">Horse</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 uppercase mb-1.5">Tag/ID Number *</label>
+                    <input type="text" id="live-tag" placeholder="Enter identification number"
+                        class="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:ring-2 focus:ring-green-100 focus:border-green-600 transition text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 uppercase mb-1.5">Age (months)</label>
+                    <input type="number" id="live-age" placeholder="Enter age in months"
+                        class="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:ring-2 focus:ring-green-100 focus:border-green-600 transition text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 uppercase mb-1.5">Purchase Date</label>
+                    <input type="date" id="live-purchase-date"
+                        class="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:ring-2 focus:ring-green-100 focus:border-green-600 transition text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 uppercase mb-1.5">Purchase Price (₹)</label>
+                    <input type="number" id="live-price" placeholder="Enter purchase price"
+                        class="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:ring-2 focus:ring-green-100 focus:border-green-600 transition text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 uppercase mb-1.5">Health Status</label>
+                    <select id="live-health"
+                        class="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:ring-2 focus:ring-green-100 focus:border-green-600 transition bg-white text-sm">
+                        <option value="healthy">Healthy</option>
+                        <option value="sick">Sick</option>
+                        <option value="recovering">Recovering</option>
+                        <option value="quarantine">Quarantine</option>
+                    </select>
+                </div>
+                <div class="md:col-span-2 lg:col-span-3">
+                    <label class="block text-xs font-semibold text-gray-500 uppercase mb-1.5">Notes</label>
+                    <input type="text" id="live-notes" placeholder="Additional notes"
+                        class="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:ring-2 focus:ring-green-100 focus:border-green-600 transition text-sm">
+                </div>
+            </div>
+            <button onclick="addLivestock()"
+                class="mt-4 px-6 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-semibold transition shadow-sm">
+                Add Livestock
+            </button>
+        </div>
+
+        <!-- Livestock Records table -->
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+            <div class="p-6 border-b border-gray-100">
+                <h3 class="text-lg font-bold text-gray-800">Livestock Records</h3>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-gray-50 text-gray-400 text-xs font-bold uppercase border-b border-gray-100">
+                            <th class="py-3 px-6">#</th>
+                            <th class="py-3 px-6">Animal</th>
+                            <th class="py-3 px-6">Tag/ID</th>
+                            <th class="py-3 px-6">Age</th>
+                            <th class="py-3 px-6">Price</th>
+                            <th class="py-3 px-6">Health</th>
+                            <th class="py-3 px-6 text-right">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="livestock-tbody" class="text-sm divide-y divide-gray-100">
+                        <tr>
+                            <td colspan="7" class="text-center text-gray-400 py-8">No livestock records yet. Add your
+                                first animal above!</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= LOANS ================= -->
+    <div id="tab-content-loans" class="tab-content hidden space-y-6">
+        <!-- Add Loan Form -->
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+            <h3 class="text-lg font-bold text-gray-800 mb-4">Add Loan</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 uppercase mb-1.5">Lender Name *</label>
+                    <input type="text" id="loan-lender" placeholder="Bank, Cooperative, etc."
+                        class="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:ring-2 focus:ring-green-100 focus:border-green-600 transition text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 uppercase mb-1.5">Loan Type *</label>
+                    <select id="loan-type"
+                        class="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:ring-2 focus:ring-green-100 focus:border-green-600 transition bg-white text-sm">
+                        <option value="crop_loan">Crop Loan</option>
+                        <option value="kcc">Kisan Credit Card</option>
+                        <option value="equipment">Equipment Loan</option>
+                        <option value="land">Land Purchase Loan</option>
+                        <option value="personal">Personal Loan</option>
+                        <option value="cooperative">Cooperative Loan</option>
+                        <option value="microfinance">Microfinance</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 uppercase mb-1.5">Loan Amount (₹) *</label>
+                    <input type="number" id="loan-amount" placeholder="Enter loan amount"
+                        class="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:ring-2 focus:ring-green-100 focus:border-green-600 transition text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 uppercase mb-1.5">Interest Rate (%)
+                        *</label>
+                    <input type="number" id="loan-rate" placeholder="Enter interest rate" step="0.01"
+                        class="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:ring-2 focus:ring-green-100 focus:border-green-600 transition text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 uppercase mb-1.5">Start Date *</label>
+                    <input type="date" id="loan-start-date"
+                        class="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:ring-2 focus:ring-green-100 focus:border-green-600 transition text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 uppercase mb-1.5">Tenure (months) *</label>
+                    <input type="number" id="loan-tenure" placeholder="Enter tenure"
+                        class="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:ring-2 focus:ring-green-100 focus:border-green-600 transition text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 uppercase mb-1.5">EMI Amount (₹) *</label>
+                    <input type="number" id="loan-emi" placeholder="Enter EMI amount"
+                        class="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:ring-2 focus:ring-green-100 focus:border-green-600 transition text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 uppercase mb-1.5">Status</label>
+                    <select id="loan-status"
+                        class="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:ring-2 focus:ring-green-100 focus:border-green-600 transition bg-white text-sm">
+                        <option value="active">Active</option>
+                        <option value="closed">Closed</option>
+                        <option value="overdue">Overdue</option>
+                    </select>
+                </div>
+                <div class="md:col-span-2 lg:col-span-4">
+                    <label class="block text-xs font-semibold text-gray-500 uppercase mb-1.5">Purpose</label>
+                    <input type="text" id="loan-purpose" placeholder="Purpose of loan"
+                        class="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:ring-2 focus:ring-green-100 focus:border-green-600 transition text-sm">
+                </div>
+            </div>
+            <button onclick="addLoan()"
+                class="mt-4 px-6 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-semibold transition shadow-sm">
+                Add Loan
+            </button>
+        </div>
+
+        <!-- Loan Records table -->
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+            <div class="p-6 border-b border-gray-100">
+                <h3 class="text-lg font-bold text-gray-800">Loan Records</h3>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-gray-50 text-gray-400 text-xs font-bold uppercase border-b border-gray-100">
+                            <th class="py-3 px-6">#</th>
+                            <th class="py-3 px-6">Lender</th>
+                            <th class="py-3 px-6">Type</th>
+                            <th class="py-3 px-6">Amount</th>
+                            <th class="py-3 px-6">Rate%</th>
+                            <th class="py-3 px-6">EMI</th>
+                            <th class="py-3 px-6">Start</th>
+                            <th class="py-3 px-6">Status</th>
+                            <th class="py-3 px-6 text-right">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="loans-tbody" class="text-sm divide-y divide-gray-100">
+                        <tr>
+                            <td colspan="9" class="text-center text-gray-400 py-8">No loan records yet. Add your first
+                                loan above!</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const API = {
+        dashboard: '/farm-management/api/v1/farm/dashboard/',
+        expenses: '/farm-management/api/v1/farm/expenses/',
+        expDeleted: '/farm-management/api/v1/farm/expenses/deleted/',
+        expPDF: '/farm-management/api/v1/farm/expenses/pdf/',
+        expExcel: '/farm-management/api/v1/farm/expenses/excel/',
+        income: '/farm-management/api/v1/farm/income/',
+        incDeleted: '/farm-management/api/v1/farm/income/deleted/',
+        incPDF: '/farm-management/api/v1/farm/income/pdf/',
+        incExcel: '/farm-management/api/v1/farm/income/excel/',
+        crops: '/farm-management/api/v1/farm/crops/',
+        livestock: '/farm-management/api/v1/farm/livestock/',
+        loans: '/farm-management/api/v1/farm/loans/',
+        reportPDF: '/farm-management/api/v1/farm/report/pdf/',
+        reportExcel: '/farm-management/api/v1/farm/report/excel/',
+    };
+
+    const csrftoken = '{{ csrf_token }}';
+
+    function authHeaders() {
+        return {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrftoken
+        };
+    }
+
+    function fmt(amount) {
+        return '₹' + parseFloat(amount || 0).toLocaleString('en-IN', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+    }
+
+    function showToast(msg, type = 'success') {
+        const t = document.createElement('div');
+        t.textContent = msg;
+
+        let bgClass = 'bg-green-600';
+        if (type === 'error') bgClass = 'bg-red-600';
+        else if (type === 'warning') bgClass = 'bg-amber-500';
+
+        t.className = `fixed bottom-6 right-6 z-[9999] px-5 py-3 rounded-xl text-white font-semibold shadow-xl flex items-center gap-2 transform translate-y-0 transition-all duration-300 ${bgClass}`;
+
+        const icon = document.createElement('span');
+        icon.className = 'material-symbols-outlined text-xl';
+        icon.textContent = type === 'success' ? 'check_circle' : type === 'error' ? 'error' : 'warning';
+        t.prepend(icon);
+
+        document.body.appendChild(t);
+
+        t.style.opacity = '0';
+        t.style.transform = 'translateY(10px)';
+        requestAnimationFrame(() => {
+            t.style.opacity = '1';
+            t.style.transform = 'translateY(0)';
+        });
+
+        setTimeout(() => {
+            t.style.opacity = '0';
+            t.style.transform = 'translateY(10px)';
+            setTimeout(() => t.remove(), 300);
+        }, 3000);
+    }
+
+    // Status / Health / Payment Styling Classes Helpers
+    function getCropStatusClass(status) {
+        switch (status) {
+            case 'planned': return 'bg-blue-50 text-blue-700 border border-blue-200';
+            case 'sowing': return 'bg-amber-50 text-amber-700 border border-amber-200';
+            case 'growing': return 'bg-green-50 text-green-700 border border-green-200';
+            case 'harvesting': return 'bg-orange-50 text-orange-700 border border-orange-200';
+            case 'completed': return 'bg-gray-150 text-gray-600 border border-gray-200';
+            default: return 'bg-gray-50 text-gray-500 border border-gray-100';
+        }
+    }
+
+    function getLivestockHealthClass(status) {
+        switch (status) {
+            case 'healthy': return 'bg-green-50 text-green-700 border border-green-200';
+            case 'sick': return 'bg-red-50 text-red-700 border border-red-200';
+            case 'recovering': return 'bg-amber-50 text-amber-700 border border-amber-200';
+            case 'quarantine': return 'bg-purple-50 text-purple-700 border border-purple-200';
+            default: return 'bg-gray-50 text-gray-500 border border-gray-100';
+        }
+    }
+
+    function getLoanStatusClass(status) {
+        switch (status) {
+            case 'active': return 'bg-green-50 text-green-700 border border-green-200';
+            case 'overdue': return 'bg-red-50 text-red-700 border border-red-200';
+            case 'closed': return 'bg-gray-150 text-gray-600 border border-gray-200';
+            default: return 'bg-gray-50 text-gray-500 border border-gray-100';
+        }
+    }
+
+    function getPaymentStatusClass(status) {
+        switch (status) {
+            case 'received': return 'bg-green-50 text-green-700 border border-green-200';
+            case 'pending': return 'bg-amber-50 text-amber-700 border border-amber-200';
+            case 'partial': return 'bg-blue-50 text-blue-700 border border-blue-200';
+            default: return 'bg-gray-50 text-gray-500 border border-gray-100';
+        }
+    }
+
+    // ── TAB SWITCHING ──────────────────────────────
+    function switchTab(tabName) {
+        document.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden'));
+
+        document.getElementById(`tab-content-${tabName}`).classList.remove('hidden');
+
+        const tabButtons = ['dashboard', 'expenses', 'income', 'crops', 'livestock', 'loans'];
+        tabButtons.forEach(btnName => {
+            const btn = document.getElementById(`tab-btn-${btnName}`);
+            btn.className = "flex-1 min-w-[120px] py-2.5 px-4 text-center rounded-lg text-sm font-semibold transition-all duration-200 text-gray-600 hover:bg-gray-50";
+        });
+
+        const activeBtn = document.getElementById(`tab-btn-${tabName}`);
+        activeBtn.className = "flex-1 min-w-[120px] py-2.5 px-4 text-center rounded-lg text-sm font-semibold transition-all duration-200 bg-green-600 text-white shadow-md";
+
+        if (tabName === 'dashboard') loadDashboard();
+        else if (tabName === 'expenses') loadExpenses();
+        else if (tabName === 'income') loadIncome();
+        else if (tabName === 'crops') loadCrops();
+        else if (tabName === 'livestock') loadLivestock();
+        else if (tabName === 'loans') loadLoans();
+    }
+
+    function showExpenseTab(type) {
+        if (type === 'active') {
+            document.getElementById('exp-active-content').classList.remove('hidden');
+            document.getElementById('exp-history-content').classList.add('hidden');
+
+            document.getElementById('exp-active-tab').className = "px-4 py-2 rounded-lg text-xs font-bold bg-green-50 text-green-700 border border-green-200";
+            document.getElementById('exp-history-tab').className = "px-4 py-2 rounded-lg text-xs font-bold text-gray-500 hover:bg-gray-50";
+        } else {
+            document.getElementById('exp-active-content').classList.add('hidden');
+            document.getElementById('exp-history-content').classList.remove('hidden');
+
+            document.getElementById('exp-active-tab').className = "px-4 py-2 rounded-lg text-xs font-bold text-gray-500 hover:bg-gray-50";
+            document.getElementById('exp-history-tab').className = "px-4 py-2 rounded-lg text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200";
+            loadDeletedExpenses();
+        }
+    }
+
+    function showIncomeTab(type) {
+        if (type === 'active') {
+            document.getElementById('inc-active-content').classList.remove('hidden');
+            document.getElementById('inc-history-content').classList.add('hidden');
+
+            document.getElementById('inc-active-tab').className = "px-4 py-2 rounded-lg text-xs font-bold bg-green-50 text-green-700 border border-green-200";
+            document.getElementById('inc-history-tab').className = "px-4 py-2 rounded-lg text-xs font-bold text-gray-500 hover:bg-gray-50";
+        } else {
+            document.getElementById('inc-active-content').classList.add('hidden');
+            document.getElementById('inc-history-content').classList.remove('hidden');
+
+            document.getElementById('inc-active-tab').className = "px-4 py-2 rounded-lg text-xs font-bold text-gray-500 hover:bg-gray-50";
+            document.getElementById('inc-history-tab').className = "px-4 py-2 rounded-lg text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200";
+            loadDeletedIncome();
+        }
+    }
+
+    // ── DASHBOARD ──────────────────────────────────
+    async function loadDashboard() {
+        try {
+            const res = await fetch(API.dashboard);
+            const d = await res.json();
+
+            document.getElementById('dash-income').textContent = fmt(d.total_income);
+            document.getElementById('dash-expense').textContent = fmt(d.total_expenses);
+            document.getElementById('dash-profit').textContent = fmt(d.net_profit);
+            document.getElementById('dash-loans').textContent = d.active_loans;
+            document.getElementById('dash-crops').textContent = d.active_crop_plans;
+            document.getElementById('dash-livestock').textContent = d.total_livestock;
+            document.getElementById('dash-exp-count').textContent = d.active_expense_records;
+            document.getElementById('dash-inc-count').textContent = d.active_income_records;
+
+            const profitValEl = document.getElementById('dash-profit');
+            const profitIconBgEl = document.getElementById('dash-profit-icon-bg');
+            const profitIconEl = document.getElementById('dash-profit-icon');
+
+            if (d.net_profit >= 0) {
+                profitValEl.className = "text-2xl font-bold text-green-600 mt-1";
+                profitIconBgEl.className = "w-12 h-12 bg-green-50 text-green-600 rounded-xl flex items-center justify-center";
+                profitIconEl.textContent = "trending_up";
+            } else {
+                profitValEl.className = "text-2xl font-bold text-red-600 mt-1";
+                profitIconBgEl.className = "w-12 h-12 bg-red-50 text-red-600 rounded-xl flex items-center justify-center";
+                profitIconEl.textContent = "trending_down";
+            }
+
+            renderMonthlyBars(d.monthly_data);
+            renderBreakdown(d.expense_by_category, d.income_by_crop);
+            renderRecentCrops(d.recent_crop_plans);
+            renderRecentLivestock(d.recent_livestock);
+        } catch (err) {
+            console.error(err);
+            showToast('Failed to load dashboard data', 'error');
+        }
+    }
+
+    function renderMonthlyBars(monthlyData) {
+        const container = document.getElementById('monthly-bars');
+        if (!container) return;
+
+        const maxInc = Math.max(...monthlyData.map(m => m.income), 1);
+        const maxExp = Math.max(...monthlyData.map(m => m.expense), 1);
+        const maxVal = Math.max(maxInc, maxExp);
+
+        container.innerHTML = monthlyData.map((m, idx) => {
+            const profitColor = m.profit >= 0 ? 'text-green-600' : 'text-red-600';
+            const profitBg = m.profit >= 0 ? 'bg-green-50' : 'bg-red-50';
+            const profitBorder = m.profit >= 0 ? 'border-green-200' : 'border-red-200';
+
+            return `
+            <div class="group relative bg-gradient-to-r from-gray-50/50 to-transparent hover:from-gray-50 border border-gray-100 rounded-xl p-4 transition-all duration-300 hover:shadow-md hover:-translate-y-0.5 cursor-pointer" style="animation: fadeInUp 0.4s ease ${idx * 0.05}s backwards;">
+                <!-- Month Header -->
+                <div class="flex items-center justify-between mb-3">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-white rounded-lg shadow-sm flex items-center justify-center border border-gray-100">
+                            <span class="text-xs font-bold text-gray-700">${m.month.substring(0, 3)}</span>
+                        </div>
+                        <div>
+                            <div class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Income</div>
+                            <div class="text-sm font-bold text-green-600">₹${(m.income / 1000).toFixed(1)}k</div>
+                        </div>
+                        <div>
+                            <div class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Expense</div>
+                            <div class="text-sm font-bold text-red-600">₹${(m.expense / 1000).toFixed(1)}k</div>
+                        </div>
+                    </div>
+                    <div class="${profitBg} ${profitColor} ${profitBorder} border px-3 py-1.5 rounded-lg">
+                        <div class="text-[9px] font-semibold uppercase tracking-wide opacity-70">${m.profit >= 0 ? 'Profit' : 'Loss'}</div>
+                        <div class="text-sm font-bold">${m.profit >= 0 ? '+' : ''}₹${(Math.abs(m.profit) / 1000).toFixed(1)}k</div>
+                    </div>
+                </div>
+                
+                <!-- Animated Mini Bars -->
+                <div class="space-y-1.5">
+                    <!-- Income Bar -->
+                    <div class="flex items-center gap-2">
+                        <div class="w-12 text-[10px] font-semibold text-gray-400">Income</div>
+                        <div class="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
+                            <div class="h-full bg-gradient-to-r from-green-500 to-green-400 rounded-full transition-all duration-700 ease-out" style="width: ${Math.max((m.income / maxVal) * 100, 2)}%"></div>
+                        </div>
+                        <div class="w-16 text-right text-[10px] font-bold text-green-600">₹${Math.round(m.income).toLocaleString('en-IN')}</div>
+                    </div>
+                    
+                    <!-- Expense Bar -->
+                    <div class="flex items-center gap-2">
+                        <div class="w-12 text-[10px] font-semibold text-gray-400">Expense</div>
+                        <div class="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
+                            <div class="h-full bg-gradient-to-r from-red-500 to-red-400 rounded-full transition-all duration-700 ease-out" style="width: ${Math.max((m.expense / maxVal) * 100, 2)}%"></div>
+                        </div>
+                        <div class="w-16 text-right text-[10px] font-bold text-red-600">₹${Math.round(m.expense).toLocaleString('en-IN')}</div>
+                    </div>
+                </div>
+                
+                <!-- Hover Glow Effect -->
+                <div class="absolute inset-0 rounded-xl bg-gradient-to-r from-green-500/0 via-green-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
+            </div>
+            `;
+        }).join('');
+
+        // Add animation keyframes if not exists
+        if (!document.getElementById('fintech-animations')) {
+            const style = document.createElement('style');
+            style.id = 'fintech-animations';
+            style.textContent = `
+                @keyframes fadeInUp {
+                    from {
+                        opacity: 0;
+                        transform: translateY(10px);
+                    }
+                    to {
+                        opacity: 1;
+                        transform: translateY(0);
+                    }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+    }
+
+    function renderBreakdown(expCats, incCrops) {
+        const expEl = document.getElementById('expense-breakdown');
+        const incEl = document.getElementById('income-breakdown');
+
+        if (expCats && expCats.length > 0) {
+            const total = expCats.reduce((s, e) => s + e.amount, 0);
+            expEl.innerHTML = expCats.map(e => `
+                <div class="group">
+                    <div class="flex justify-between items-center mb-1 text-xs font-semibold text-gray-600">
+                        <span class="capitalize">${e.category}</span>
+                        <span class="text-red-600">${fmt(e.amount)}</span>
+                    </div>
+                    <div class="w-full bg-gray-100 rounded-full h-2">
+                        <div class="bg-red-600 h-2 rounded-full transition-all duration-500" style="width: ${(e.amount / total) * 100}%"></div>
+                    </div>
+                </div>
+            `).join('');
+        } else {
+            expEl.innerHTML = '<p class="text-center text-gray-400 py-8 text-sm">No expense data available</p>';
+        }
+
+        if (incCrops && incCrops.length > 0) {
+            const total = incCrops.reduce((s, i) => s + i.amount, 0);
+            incEl.innerHTML = incCrops.map(i => `
+                <div class="group">
+                    <div class="flex justify-between items-center mb-1 text-xs font-semibold text-gray-600">
+                        <span class="capitalize">${i.crop}</span>
+                        <span class="text-green-600">${fmt(i.amount)}</span>
+                    </div>
+                    <div class="w-full bg-gray-100 rounded-full h-2">
+                        <div class="bg-green-600 h-2 rounded-full transition-all duration-500" style="width: ${(i.amount / total) * 100}%"></div>
+                    </div>
+                </div>
+            `).join('');
+        } else {
+            incEl.innerHTML = '<p class="text-center text-gray-400 py-8 text-sm">No income data available</p>';
+        }
+    }
+
+    function renderRecentCrops(crops) {
+        const el = document.getElementById('recent-crops');
+        if (!crops || crops.length === 0) {
+            el.innerHTML = '<p class="text-center text-gray-400 py-8 text-sm">No crop plans yet. Add one in the Crops tab!</p>';
+            return;
+        }
+        el.innerHTML = crops.map(c => `
+            <div class="flex justify-between items-center py-3">
+                <div>
+                    <p class="font-bold text-sm text-gray-800 capitalize">${c.crop}</p>
+                    <p class="text-xs text-gray-400 mt-0.5">${c.area_acres} acres • Planted: ${c.planting_date}</p>
+                </div>
+                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold ${getCropStatusClass(c.status)} capitalize">${c.status}</span>
+            </div>
+        `).join('');
+    }
+
+    function renderRecentLivestock(animals) {
+        const el = document.getElementById('recent-livestock');
+        if (!animals || animals.length === 0) {
+            el.innerHTML = '<p class="text-center text-gray-400 py-8 text-sm">No livestock records yet. Add one in the Livestock tab!</p>';
+            return;
+        }
+        el.innerHTML = animals.map(a => `
+            <div class="flex justify-between items-center py-3">
+                <div>
+                    <p class="font-bold text-sm text-gray-800 capitalize">${a.animal_type}</p>
+                    <p class="text-xs text-gray-400 mt-0.5">Tag: ${a.tag_number}</p>
+                </div>
+                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold ${getLivestockHealthClass(a.health_status)} capitalize">${a.health_status}</span>
+            </div>
+        `).join('');
+    }
+
+    // ── EXPENSES ───────────────────────────────────
+    async function loadExpenses() {
+        try {
+            const res = await fetch(API.expenses);
+            const d = await res.json();
+            const expenses = d.expenses || [];
+            const total = expenses.reduce((s, e) => s + e.amount, 0);
+
+            document.getElementById('exp-total').textContent = fmt(total);
+            document.getElementById('exp-active-count').textContent = expenses.length;
+            document.getElementById('exp-active-badge').textContent = expenses.length;
+
+            const tbody = document.getElementById('exp-active-tbody');
+            if (expenses.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="text-center text-gray-400 py-8">No expenses recorded yet</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = expenses.map((e, idx) => `
+                <tr class="hover:bg-gray-50/70 transition">
+                    <td class="py-3.5 px-6 text-gray-500 font-semibold">${idx + 1}</td>
+                    <td class="py-3.5 px-6 font-bold text-gray-800 capitalize">${e.category_display}</td>
+                    <td class="py-3.5 px-6 text-red-600 font-semibold">${fmt(e.amount)}</td>
+                    <td class="py-3.5 px-6 text-gray-500">${e.date}</td>
+                    <td class="py-3.5 px-6 text-gray-400 italic">${e.notes || '-'}</td>
+                    <td class="py-3.5 px-6 text-right">
+                        <button class="text-red-600 hover:text-white hover:bg-red-600 border border-red-200 px-3 py-1 rounded-lg text-xs font-semibold transition" onclick="deleteExpense(${e.id})">Delete</button>
+                    </td>
+                </tr>
+            `).join('');
+        } catch (err) {
+            console.error(err);
+            showToast('Failed to load expenses', 'error');
+        }
+    }
+
+    async function loadDeletedExpenses() {
+        try {
+            const res = await fetch(API.expDeleted);
+            const d = await res.json();
+            const expenses = d.expenses || [];
+
+            document.getElementById('exp-deleted-count').textContent = expenses.length;
+            document.getElementById('exp-history-badge').textContent = expenses.length;
+
+            const tbody = document.getElementById('exp-history-tbody');
+            if (expenses.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="text-center text-gray-400 py-8">No deleted records</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = expenses.map((e, idx) => `
+                <tr class="hover:bg-gray-50/70 transition">
+                    <td class="py-3.5 px-6 text-gray-500 font-semibold">${idx + 1}</td>
+                    <td class="py-3.5 px-6 font-bold text-gray-800 capitalize">${e.category_display}</td>
+                    <td class="py-3.5 px-6 text-red-600 font-semibold">${fmt(e.amount)}</td>
+                    <td class="py-3.5 px-6 text-gray-500">${e.date}</td>
+                    <td class="py-3.5 px-6 text-right">
+                        <div class="flex gap-2 justify-end">
+                            <button class="text-green-600 hover:text-white hover:bg-green-600 border border-green-200 px-3 py-1 rounded-lg text-xs font-semibold transition" onclick="restoreExpense(${e.id})">Restore</button>
+                            <button class="text-red-600 hover:text-white hover:bg-red-600 border border-red-200 px-3 py-1 rounded-lg text-xs font-semibold transition" onclick="permanentlyDeleteExpense(${e.id})">Delete Permanently</button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        } catch (err) {
+            console.error(err);
+            showToast('Failed to load history', 'error');
+        }
+    }
+
+    async function addExpense() {
+        const category = document.getElementById('exp-category').value;
+        const amount = document.getElementById('exp-amount').value;
+        const date = document.getElementById('exp-date').value;
+        const notes = document.getElementById('exp-notes').value;
+
+        if (!category || !amount) {
+            showToast('Category and amount are required', 'error');
+            return;
+        }
+
+        try {
+            const res = await fetch(API.expenses, {
+                method: 'POST',
+                headers: authHeaders(),
+                body: JSON.stringify({ category, amount, date, notes })
+            });
+
+            if (res.ok) {
+                showToast('✅ Expense added successfully!');
+                document.getElementById('exp-category').value = '';
+                document.getElementById('exp-amount').value = '';
+                document.getElementById('exp-notes').value = '';
+                loadExpenses();
+            } else {
+                const err = await res.json();
+                showToast(err.error || 'Failed to add expense', 'error');
+            }
+        } catch (err) {
+            console.error(err);
+            showToast('Error adding expense', 'error');
+        }
+    }
+
+    async function deleteExpense(id) {
+        if (!confirm('Move this expense to history?')) return;
+        try {
+            const res = await fetch(`${API.expenses}${id}/`, {
+                method: 'DELETE',
+                headers: authHeaders()
+            });
+            if (res.ok) {
+                showToast('✅ Expense moved to history');
+                loadExpenses();
+                loadDeletedExpenses();
+            } else {
+                showToast('Failed to delete', 'error');
+            }
+        } catch (err) {
+            console.error(err);
+            showToast('Error deleting expense', 'error');
+        }
+    }
+
+    async function restoreExpense(id) {
+        try {
+            const res = await fetch(`${API.expenses}${id}/restore/`, {
+                method: 'POST',
+                headers: authHeaders()
+            });
+            if (res.ok) {
+                showToast('✅ Expense restored!');
+                loadExpenses();
+                loadDeletedExpenses();
+            } else {
+                showToast('Failed to restore', 'error');
+            }
+        } catch (err) {
+            console.error(err);
+            showToast('Error restoring expense', 'error');
+        }
+    }
+
+    async function permanentlyDeleteExpense(id) {
+        if (!confirm('⚠️ Are you sure you want to permanently delete this expense? This action cannot be undone!')) return;
+        try {
+            const res = await fetch(`${API.expenses}${id}/permanent/`, {
+                method: 'DELETE',
+                headers: authHeaders()
+            });
+            if (res.ok) {
+                showToast('✅ Expense permanently deleted!');
+                loadDeletedExpenses();
+            } else {
+                showToast('Failed to permanently delete', 'error');
+            }
+        } catch (err) {
+            console.error(err);
+            showToast('Error permanently deleting expense', 'error');
+        }
+    }
+
+    function downloadExpenses(type) {
+        const url = type === 'pdf' ? API.expPDF : API.expExcel;
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', '');
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        showToast(`⬇️ Downloading expenses ${type.toUpperCase()}...`);
+    }
+
+    // ── INCOME ─────────────────────────────────────
+    async function loadIncome() {
+        try {
+            const res = await fetch(API.income);
+            const d = await res.json();
+            const incomes = d.incomes || [];
+            const total = incomes.reduce((s, i) => s + (i.total_amount || 0), 0);
+
+            document.getElementById('inc-total').textContent = fmt(total);
+            document.getElementById('inc-active-count').textContent = incomes.length;
+            document.getElementById('inc-active-badge').textContent = incomes.length;
+
+            const tbody = document.getElementById('inc-active-tbody');
+            if (incomes.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="8" class="text-center text-gray-400 py-8">No income recorded yet</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = incomes.map((i, idx) => `
+                <tr class="hover:bg-gray-50/70 transition">
+                    <td class="py-3.5 px-6 text-gray-500 font-semibold">${idx + 1}</td>
+                    <td class="py-3.5 px-6 font-bold text-gray-800 capitalize">${i.crop}</td>
+                    <td class="py-3.5 px-6 text-gray-600">${i.quantity ? i.quantity + ' ' + i.unit : '-'}</td>
+                    <td class="py-3.5 px-6 text-green-600 font-semibold">${fmt(i.total_amount)}</td>
+                    <td class="py-3.5 px-6 text-gray-800">${i.buyer_name || '-'}</td>
+                    <td class="py-3.5 px-6 text-gray-500">${i.sale_date}</td>
+                    <td class="py-3.5 px-6">
+                        <span class="px-2.5 py-0.5 rounded-full text-xs font-bold ${getPaymentStatusClass(i.payment_status)} capitalize">${i.payment_status}</span>
+                    </td>
+                    <td class="py-3.5 px-6 text-right">
+                        <button class="text-red-600 hover:text-white hover:bg-red-600 border border-red-200 px-3 py-1 rounded-lg text-xs font-semibold transition" onclick="deleteIncome(${i.id})">Delete</button>
+                    </td>
+                </tr>
+            `).join('');
+        } catch (err) {
+            console.error(err);
+            showToast('Failed to load income records', 'error');
+        }
+    }
+
+    async function loadDeletedIncome() {
+        try {
+            const res = await fetch(API.incDeleted);
+            const d = await res.json();
+            const incomes = d.incomes || [];
+
+            document.getElementById('inc-deleted-count').textContent = incomes.length;
+            document.getElementById('inc-history-badge').textContent = incomes.length;
+
+            const tbody = document.getElementById('inc-history-tbody');
+            if (incomes.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="text-center text-gray-400 py-8">No deleted records</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = incomes.map((i, idx) => `
+                <tr class="hover:bg-gray-50/70 transition">
+                    <td class="py-3.5 px-6 text-gray-500 font-semibold">${idx + 1}</td>
+                    <td class="py-3.5 px-6 font-bold text-gray-800 capitalize">${i.crop}</td>
+                    <td class="py-3.5 px-6 text-green-600 font-semibold">${fmt(i.total_amount)}</td>
+                    <td class="py-3.5 px-6 text-gray-500">${i.sale_date}</td>
+                    <td class="py-3.5 px-6 text-right">
+                        <div class="flex gap-2 justify-end">
+                            <button class="text-green-600 hover:text-white hover:bg-green-600 border border-green-200 px-3 py-1 rounded-lg text-xs font-semibold transition" onclick="restoreIncome(${i.id})">Restore</button>
+                            <button class="text-red-600 hover:text-white hover:bg-red-600 border border-red-200 px-3 py-1 rounded-lg text-xs font-semibold transition" onclick="permanentlyDeleteIncome(${i.id})">Delete Permanently</button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        } catch (err) {
+            console.error(err);
+            showToast('Failed to load income history', 'error');
+        }
+    }
+
+    async function addIncome() {
+        const crop = document.getElementById('inc-crop').value;
+        const quantity = document.getElementById('inc-qty').value;
+        const unit = document.getElementById('inc-unit').value;
+        const rate_per_unit = document.getElementById('inc-rate').value;
+        const buyer_name = document.getElementById('inc-buyer').value;
+        const sale_date = document.getElementById('inc-date').value;
+        const payment_status = document.getElementById('inc-payment').value;
+        const notes = document.getElementById('inc-notes').value;
+
+        if (!crop) {
+            showToast('Crop is required', 'error');
+            return;
+        }
+
+        if (!quantity || quantity <= 0) {
+            showToast('Quantity is required and must be greater than 0', 'error');
+            return;
+        }
+
+        if (!rate_per_unit || rate_per_unit <= 0) {
+            showToast('Rate per unit is required and must be greater than 0', 'error');
+            return;
+        }
+
+        try {
+            const res = await fetch(API.income, {
+                method: 'POST',
+                headers: authHeaders(),
+                body: JSON.stringify({
+                    crop, quantity, unit, rate_per_unit,
+                    buyer_name, sale_date, payment_status, notes
+                })
+            });
+
+            if (res.ok) {
+                showToast('✅ Income recorded successfully!');
+                ['inc-crop', 'inc-qty', 'inc-rate', 'inc-buyer', 'inc-notes'].forEach(id =>
+                    document.getElementById(id).value = ''
+                );
+                loadIncome();
+            } else {
+                const err = await res.json();
+                showToast(err.error || 'Failed to add income', 'error');
+            }
+        } catch (err) {
+            console.error(err);
+            showToast('Error recording income', 'error');
+        }
+    }
+
+    async function deleteIncome(id) {
+        if (!confirm('Move this income to history?')) return;
+        try {
+            const res = await fetch(`${API.income}${id}/`, {
+                method: 'DELETE',
+                headers: authHeaders()
+            });
+            if (res.ok) {
+                showToast('✅ Income moved to history');
+                loadIncome();
+                loadDeletedIncome();
+            } else {
+                showToast('Failed to delete', 'error');
+            }
+        } catch (err) {
+            console.error(err);
+            showToast('Error deleting income', 'error');
+        }
+    }
+
+    async function restoreIncome(id) {
+        try {
+            const res = await fetch(`${API.income}${id}/restore/`, {
+                method: 'POST',
+                headers: authHeaders()
+            });
+            if (res.ok) {
+                showToast('✅ Income restored!');
+                loadIncome();
+                loadDeletedIncome();
+            } else {
+                showToast('Failed to restore', 'error');
+            }
+        } catch (err) {
+            console.error(err);
+            showToast('Error restoring income', 'error');
+        }
+    }
+
+    async function permanentlyDeleteIncome(id) {
+        if (!confirm('⚠️ Are you sure you want to permanently delete this income record? This action cannot be undone!')) return;
+        try {
+            const res = await fetch(`${API.income}${id}/permanent/`, {
+                method: 'DELETE',
+                headers: authHeaders()
+            });
+            if (res.ok) {
+                showToast('✅ Income permanently deleted!');
+                loadDeletedIncome();
+            } else {
+                showToast('Failed to permanently delete', 'error');
+            }
+        } catch (err) {
+            console.error(err);
+            showToast('Error permanently deleting income', 'error');
+        }
+    }
+
+    function downloadIncome(type) {
+        const url = type === 'pdf' ? API.incPDF : API.incExcel;
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', '');
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        showToast(`⬇️ Downloading income ${type.toUpperCase()}...`);
+    }
+
+    // ── CROPS ──────────────────────────────────────
+    async function loadCrops() {
+        try {
+            const res = await fetch(API.crops);
+            const d = await res.json();
+            const crops = d.crops || [];
+
+            const tbody = document.getElementById('crops-tbody');
+            if (crops.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="9" class="text-center text-gray-400 py-8">No crop plans yet. Add your first crop plan above!</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = crops.map((c, idx) => `
+                <tr class="hover:bg-gray-50/70 transition">
+                    <td class="py-3.5 px-6 text-gray-500 font-semibold">${idx + 1}</td>
+                    <td class="py-3.5 px-6 font-bold text-gray-800 capitalize">${c.crop_display}</td>
+                    <td class="py-3.5 px-6 text-gray-600">${c.area_acres} acres</td>
+                    <td class="py-3.5 px-6 text-gray-500">${c.planting_date}</td>
+                    <td class="py-3.5 px-6 text-gray-500">${c.expected_harvest || '-'}</td>
+                    <td class="py-3.5 px-6 text-red-500 font-semibold">${c.estimated_cost ? fmt(c.estimated_cost) : '-'}</td>
+                    <td class="py-3.5 px-6 text-green-600 font-semibold">${c.expected_revenue ? fmt(c.expected_revenue) : '-'}</td>
+                    <td class="py-3.5 px-6">
+                        <select onchange="updateCropStatus(${c.id}, this.value)" class="px-2.5 py-1 rounded-full text-xs font-bold border outline-none cursor-pointer transition ${getCropStatusClass(c.status)}">
+                            <option value="planned" ${c.status === 'planned' ? 'selected' : ''}>Planned</option>
+                            <option value="sowing" ${c.status === 'sowing' ? 'selected' : ''}>Sowing</option>
+                            <option value="growing" ${c.status === 'growing' ? 'selected' : ''}>Growing</option>
+                            <option value="harvesting" ${c.status === 'harvesting' ? 'selected' : ''}>Harvesting</option>
+                            <option value="completed" ${c.status === 'completed' ? 'selected' : ''}>Completed</option>
+                        </select>
+                    </td>
+                    <td class="py-3.5 px-6 text-right">
+                        <button class="text-red-600 hover:text-white hover:bg-red-600 border border-red-200 px-3 py-1 rounded-lg text-xs font-semibold transition" onclick="deleteCropPlan(${c.id})">Delete</button>
+                    </td>
+                </tr>
+            `).join('');
+        } catch (err) {
+            console.error(err);
+            showToast('Failed to load crop plans', 'error');
+        }
+    }
+
+    async function addCropPlan() {
+        const crop = document.getElementById('crop-type').value;
+        const area_acres = document.getElementById('crop-area').value;
+        const planting_date = document.getElementById('crop-plant-date').value;
+        const expected_harvest = document.getElementById('crop-harvest-date').value;
+        const estimated_cost = document.getElementById('crop-cost').value;
+        const expected_revenue = document.getElementById('crop-revenue').value;
+        const status = document.getElementById('crop-status').value;
+        const notes = document.getElementById('crop-notes').value;
+
+        if (!crop || !area_acres || !planting_date) {
+            showToast('Crop, Area, and Planting Date are required', 'error');
+            return;
+        }
+
+        try {
+            const res = await fetch(API.crops, {
+                method: 'POST',
+                headers: authHeaders(),
+                body: JSON.stringify({
+                    crop, area_acres, planting_date, expected_harvest,
+                    estimated_cost, expected_revenue, status, notes
+                })
+            });
+
+            if (res.ok) {
+                showToast('✅ Crop plan added successfully!');
+                ['crop-type', 'crop-area', 'crop-plant-date', 'crop-harvest-date', 'crop-cost', 'crop-revenue', 'crop-notes'].forEach(id =>
+                    document.getElementById(id).value = ''
+                );
+                loadCrops();
+            } else {
+                const err = await res.json();
+                showToast(err.error || 'Failed to add crop plan', 'error');
+            }
+        } catch (err) {
+            console.error(err);
+            showToast('Error adding crop plan', 'error');
+        }
+    }
+
+    async function updateCropStatus(id, newStatus) {
+        try {
+            const res = await fetch(`${API.crops}${id}/`, {
+                method: 'PUT',
+                headers: authHeaders(),
+                body: JSON.stringify({ status: newStatus })
+            });
+            if (res.ok) {
+                showToast('✅ Crop status updated!');
+                loadCrops();
+            } else {
+                showToast('Failed to update status', 'error');
+            }
+        } catch (err) {
+            console.error(err);
+            showToast('Error updating status', 'error');
+        }
+    }
+
+    async function deleteCropPlan(id) {
+        if (!confirm('Are you sure you want to delete this crop plan?')) return;
+        try {
+            const res = await fetch(`${API.crops}${id}/`, {
+                method: 'DELETE',
+                headers: authHeaders()
+            });
+            if (res.ok) {
+                showToast('✅ Crop plan deleted');
+                loadCrops();
+            } else {
+                showToast('Failed to delete crop plan', 'error');
+            }
+        } catch (err) {
+            console.error(err);
+            showToast('Error deleting crop plan', 'error');
+        }
+    }
+
+    // ── LIVESTOCK ──────────────────────────────────
+    async function loadLivestock() {
+        try {
+            const res = await fetch(API.livestock);
+            const d = await res.json();
+            const animals = d.livestock || [];
+
+            const tbody = document.getElementById('livestock-tbody');
+            if (animals.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="text-center text-gray-400 py-8">No livestock records yet. Add your first animal above!</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = animals.map((a, idx) => `
+                <tr class="hover:bg-gray-50/70 transition">
+                    <td class="py-3.5 px-6 text-gray-500 font-semibold">${idx + 1}</td>
+                    <td class="py-3.5 px-6 font-bold text-gray-800 capitalize">${a.animal_display}</td>
+                    <td class="py-3.5 px-6 font-mono text-xs"><span class="bg-gray-100 text-gray-700 px-2 py-0.5 rounded border border-gray-200">${a.tag_number}</span></td>
+                    <td class="py-3.5 px-6 text-gray-600">${a.age_months ? a.age_months + ' months' : '-'}</td>
+                    <td class="py-3.5 px-6 text-gray-700 font-semibold">${a.purchase_price ? fmt(a.purchase_price) : '-'}</td>
+                    <td class="py-3.5 px-6">
+                        <select onchange="updateLivestockHealth(${a.id}, this.value)" class="px-2.5 py-1 rounded-full text-xs font-bold border outline-none cursor-pointer transition ${getLivestockHealthClass(a.health_status)}">
+                            <option value="healthy" ${a.health_status === 'healthy' ? 'selected' : ''}>Healthy</option>
+                            <option value="sick" ${a.health_status === 'sick' ? 'selected' : ''}>Sick</option>
+                            <option value="recovering" ${a.health_status === 'recovering' ? 'selected' : ''}>Recovering</option>
+                            <option value="quarantine" ${a.health_status === 'quarantine' ? 'selected' : ''}>Quarantine</option>
+                        </select>
+                    </td>
+                    <td class="py-3.5 px-6 text-right">
+                        <button class="text-red-600 hover:text-white hover:bg-red-600 border border-red-200 px-3 py-1 rounded-lg text-xs font-semibold transition" onclick="deleteLivestock(${a.id})">Remove</button>
+                    </td>
+                </tr>
+            `).join('');
+        } catch (err) {
+            console.error(err);
+            showToast('Failed to load livestock records', 'error');
+        }
+    }
+
+    async function addLivestock() {
+        const animal_type = document.getElementById('live-type').value;
+        const tag_number = document.getElementById('live-tag').value;
+        const age_months = document.getElementById('live-age').value;
+        const purchase_date = document.getElementById('live-purchase-date').value;
+        const purchase_price = document.getElementById('live-price').value;
+        const health_status = document.getElementById('live-health').value;
+        const notes = document.getElementById('live-notes').value;
+
+        if (!animal_type || !tag_number) {
+            showToast('Animal Type and Tag/ID Number are required', 'error');
+            return;
+        }
+
+        try {
+            const res = await fetch(API.livestock, {
+                method: 'POST',
+                headers: authHeaders(),
+                body: JSON.stringify({
+                    animal_type, tag_number, age_months,
+                    purchase_date, purchase_price, health_status, notes
+                })
+            });
+
+            if (res.ok) {
+                showToast('✅ Livestock animal added successfully!');
+                ['live-type', 'live-tag', 'live-age', 'live-purchase-date', 'live-price', 'live-notes'].forEach(id =>
+                    document.getElementById(id).value = ''
+                );
+                loadLivestock();
+            } else {
+                const err = await res.json();
+                showToast(err.error || 'Failed to add livestock', 'error');
+            }
+        } catch (err) {
+            console.error(err);
+            showToast('Error adding livestock record', 'error');
+        }
+    }
+
+    async function updateLivestockHealth(id, healthStatus) {
+        try {
+            const res = await fetch(`${API.livestock}${id}/`, {
+                method: 'PUT',
+                headers: authHeaders(),
+                body: JSON.stringify({ health_status: healthStatus })
+            });
+            if (res.ok) {
+                showToast('✅ Health status updated!');
+                loadLivestock();
+            } else {
+                showToast('Failed to update health status', 'error');
+            }
+        } catch (err) {
+            console.error(err);
+            showToast('Error updating health status', 'error');
+        }
+    }
+
+    async function deleteLivestock(id) {
+        if (!confirm('Are you sure you want to remove this livestock animal?')) return;
+        try {
+            const res = await fetch(`${API.livestock}${id}/`, {
+                method: 'DELETE',
+                headers: authHeaders()
+            });
+            if (res.ok) {
+                showToast('✅ Livestock record removed');
+                loadLivestock();
+            } else {
+                showToast('Failed to remove livestock', 'error');
+            }
+        } catch (err) {
+            console.error(err);
+            showToast('Error removing livestock record', 'error');
+        }
+    }
+
+    // ── LOANS ──────────────────────────────────────
+    async function loadLoans() {
+        try {
+            const res = await fetch(API.loans);
+            const d = await res.json();
+            const loans = d.loans || [];
+
+            const tbody = document.getElementById('loans-tbody');
+            if (loans.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="9" class="text-center text-gray-400 py-8">No loan records yet. Add your first loan above!</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = loans.map((l, idx) => `
+                <tr class="hover:bg-gray-50/70 transition">
+                    <td class="py-3.5 px-6 text-gray-500 font-semibold">${idx + 1}</td>
+                    <td class="py-3.5 px-6 font-bold text-gray-800 capitalize">${l.lender_name}</td>
+                    <td class="py-3.5 px-6 text-gray-600">${l.loan_type_display}</td>
+                    <td class="py-3.5 px-6 text-orange-600 font-bold">${fmt(l.loan_amount)}</td>
+                    <td class="py-3.5 px-6 text-gray-600">${l.interest_rate}%</td>
+                    <td class="py-3.5 px-6 text-gray-700 font-semibold">${fmt(l.emi_amount)}/mo</td>
+                    <td class="py-3.5 px-6 text-gray-500">${l.start_date}</td>
+                    <td class="py-3.5 px-6">
+                        <select onchange="updateLoanStatus(${l.id}, this.value)" class="px-2.5 py-1 rounded-full text-xs font-bold border outline-none cursor-pointer transition ${getLoanStatusClass(l.status)}">
+                            <option value="active" ${l.status === 'active' ? 'selected' : ''}>Active</option>
+                            <option value="closed" ${l.status === 'closed' ? 'selected' : ''}>Closed</option>
+                            <option value="overdue" ${l.status === 'overdue' ? 'selected' : ''}>Overdue</option>
+                        </select>
+                    </td>
+                    <td class="py-3.5 px-6 text-right">
+                        <button class="text-red-600 hover:text-white hover:bg-red-600 border border-red-200 px-3 py-1 rounded-lg text-xs font-semibold transition" onclick="deleteLoan(${l.id})">Delete</button>
+                    </td>
+                </tr>
+            `).join('');
+        } catch (err) {
+            console.error(err);
+            showToast('Failed to load loan records', 'error');
+        }
+    }
+
+    async function addLoan() {
+        const lender_name = document.getElementById('loan-lender').value;
+        const loan_type = document.getElementById('loan-type').value;
+        const loan_amount = document.getElementById('loan-amount').value;
+        const interest_rate = document.getElementById('loan-rate').value;
+        const start_date = document.getElementById('loan-start-date').value;
+        const tenure_months = document.getElementById('loan-tenure').value;
+        const emi_amount = document.getElementById('loan-emi').value;
+        const status = document.getElementById('loan-status').value;
+        const purpose = document.getElementById('loan-purpose').value;
+
+        if (!lender_name || !loan_amount || !interest_rate || !start_date || !tenure_months || !emi_amount) {
+            showToast('Lender, Amount, Rate, Start Date, Tenure, and EMI are required', 'error');
+            return;
+        }
+
+        try {
+            const res = await fetch(API.loans, {
+                method: 'POST',
+                headers: authHeaders(),
+                body: JSON.stringify({
+                    lender_name, loan_type, loan_amount, interest_rate,
+                    start_date, tenure_months, emi_amount, status, purpose
+                })
+            });
+
+            if (res.ok) {
+                showToast('✅ Loan record added successfully!');
+                ['loan-lender', 'loan-amount', 'loan-rate', 'loan-start-date', 'loan-tenure', 'loan-emi', 'loan-purpose'].forEach(id =>
+                    document.getElementById(id).value = ''
+                );
+                loadLoans();
+            } else {
+                const err = await res.json();
+                showToast(err.error || 'Failed to add loan', 'error');
+            }
+        } catch (err) {
+            console.error(err);
+            showToast('Error adding loan record', 'error');
+        }
+    }
+
+    async function updateLoanStatus(id, newStatus) {
+        try {
+            const res = await fetch(`${API.loans}${id}/`, {
+                method: 'PUT',
+                headers: authHeaders(),
+                body: JSON.stringify({ status: newStatus })
+            });
+            if (res.ok) {
+                showToast('✅ Loan status updated!');
+                loadLoans();
+            } else {
+                showToast('Failed to update loan status', 'error');
+            }
+        } catch (err) {
+            console.error(err);
+            showToast('Error updating loan status', 'error');
+        }
+    }
+
+    async function deleteLoan(id) {
+        if (!confirm('Are you sure you want to delete this loan record?')) return;
+        try {
+            const res = await fetch(`${API.loans}${id}/`, {
+                method: 'DELETE',
+                headers: authHeaders()
+            });
+            if (res.ok) {
+                showToast('✅ Loan record deleted');
+                loadLoans();
+            } else {
+                showToast('Failed to delete loan record', 'error');
+            }
+        } catch (err) {
+            console.error(err);
+            showToast('Error deleting loan record', 'error');
+        }
+    }
+
+    // ── DASHBOARD REPORTS ──────────────────────────
+    function downloadFullReport(type) {
+        const url = type === 'pdf' ? API.reportPDF : API.reportExcel;
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', '');
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        showToast(`⬇️ Downloading complete farm report (${type.toUpperCase()})...`);
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const todayStr = new Date().toISOString().split('T')[0];
+        ['exp-date', 'inc-date', 'crop-plant-date', 'live-purchase-date', 'loan-start-date'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.value = todayStr;
+        });
+
+        // Initialize active tab as Dashboard
+        switchTab('dashboard');
+    });
+</script>
+{% endblock %}

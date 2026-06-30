@@ -1,0 +1,737 @@
+{% extends 'dashboard/base_dashboard.html' %}
+
+{% block page_title %}Weather Forecast{% endblock %}
+{% block page_subtitle %}Real-time weather updates and agricultural recommendations{% endblock %}
+
+{% block extra_css %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+    .weather-gradient {
+        background: linear-gradient(135deg, #e8fff0 0%, #ccf8df 100%);
+    }
+
+    .chart-container {
+        height: 220px;
+        position: relative;
+    }
+
+    .farming-impact-card {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .farming-impact-card:hover {
+        transform: translateY(-2px);
+    }
+</style>
+{% endblock %}
+
+{% block dashboard_content %}
+<div class="max-w-7xl mx-auto space-y-6">
+    <!-- Top Search & Geolocation Action Bar -->
+    <div
+        class="flex flex-col sm:flex-row gap-4 items-center justify-between bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+        <div class="relative w-full max-w-lg">
+            <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">search</span>
+            <input type="text" id="citySearch" placeholder="Search for a city or farm location..."
+                class="w-full pl-12 pr-32 py-2.5 rounded-full border border-gray-200 focus:border-green-600 focus:ring-2 focus:ring-green-100 transition-all text-sm outline-none"
+                autocomplete="off" />
+            <button id="searchBtn"
+                class="absolute right-1.5 top-1/2 -translate-y-1/2 bg-green-750 hover:bg-green-800 text-white px-5 py-1.5 rounded-full transition flex items-center gap-1.5 text-xs font-semibold shadow-sm"
+                style="background-color: #0f5238;">
+                <span class="material-symbols-outlined text-sm">search</span>
+                Search
+            </button>
+
+            <!-- Suggestions Dropdown -->
+            <div id="searchSuggestions"
+                class="absolute w-full mt-2 bg-white rounded-xl shadow-xl border border-gray-200 hidden z-50 max-h-64 overflow-y-auto">
+            </div>
+        </div>
+
+        <button id="detectLocationBtn"
+            class="flex items-center gap-2 px-5 py-2.5 bg-green-50 text-green-700 border border-green-150 rounded-full hover:bg-green-100 transition text-xs font-semibold shadow-sm">
+            <span class="material-symbols-outlined text-base">my_location</span>
+            Detect My Location
+        </button>
+    </div>
+
+    <!-- Error Alert Banner -->
+    <div id="errorBanner" class="hidden p-4 bg-red-50 border border-red-200 text-red-800 rounded-xl text-sm flex items-center gap-3">
+        <span class="material-symbols-outlined text-red-650">error</span>
+        <span id="errorMessage">Location not found. Try a nearby village, town, district, or city.</span>
+    </div>
+
+    <!-- Welcome Screen / Search-First UI -->
+    <div id="welcomeContainer" class="flex flex-col items-center justify-center text-center p-8 py-16 bg-white rounded-2xl border border-gray-100 shadow-sm space-y-6">
+        <div class="w-24 h-24 rounded-full bg-green-50 flex items-center justify-center text-green-700 animate-bounce" style="animation-duration: 3s;">
+            <span class="material-symbols-outlined text-5xl" style="font-variation-settings: 'FILL' 1;">partly_cloudy_day</span>
+        </div>
+        <div class="max-w-md space-y-2">
+            <h2 class="text-2xl font-extrabold text-gray-900 tracking-tight">Weather Forecast & Advisory</h2>
+            <p class="text-sm text-gray-500 leading-relaxed">
+                Search for any village, town, district, or city to view real-time weather information and farming recommendations.
+            </p>
+        </div>
+    </div>
+
+    <!-- Loading Skeleton -->
+    <div id="loadingSkeleton" class="hidden">
+        <div class="animate-pulse space-y-6">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="lg:col-span-2 bg-gray-200 h-72 rounded-2xl"></div>
+                <div class="bg-gray-200 h-72 rounded-2xl"></div>
+            </div>
+            <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
+                <div class="lg:col-span-3 bg-gray-200 h-80 rounded-2xl"></div>
+                <div class="lg:col-span-2 bg-gray-200 h-80 rounded-2xl"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Weather Content Canvas -->
+    <div id="weatherContent" class="space-y-6 transition-opacity duration-300 hidden">
+        <!-- Hero & Farming Impact -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Current Weather Card -->
+            <div id="currentWeatherCard"
+                class="lg:col-span-2 relative overflow-hidden rounded-2xl p-6 md:p-8 weather-gradient shadow-sm border border-green-100 flex flex-col justify-between min-h-[300px]">
+                <!-- Interactive Elements Background -->
+                <div class="absolute inset-0 opacity-15 pointer-events-none">
+                    <div class="absolute top-5 left-5 w-24 h-24 bg-white rounded-full blur-2xl animate-pulse"></div>
+                    <div
+                        class="absolute bottom-5 right-5 w-32 h-32 bg-white rounded-full blur-2xl animate-pulse delay-1000">
+                    </div>
+                </div>
+
+                <div class="relative z-10 flex justify-between items-start">
+                    <div>
+                        <p id="cityName" class="font-bold text-green-800 text-xs md:text-sm tracking-wide">Loading...
+                        </p>
+                        <h2 id="weatherDescription" class="text-2xl md:text-3xl font-bold text-gray-900 mt-1">
+                            Fetching...</h2>
+                    </div>
+                    <div id="weatherIcon" class="text-6xl md:text-7xl">☀️</div>
+                </div>
+
+                <div class="relative z-10 flex flex-wrap items-end justify-between gap-4 mt-8">
+                    <div class="flex items-start">
+                        <span id="temperature"
+                            class="text-6xl md:text-7xl font-bold tracking-tighter text-gray-900 leading-none">--</span>
+                        <span class="text-2xl font-semibold text-gray-700 mt-1">°C</span>
+                    </div>
+
+                    <div
+                        class="grid grid-cols-3 gap-x-6 md:gap-x-10 border-t border-green-200/50 pt-4 w-full md:w-auto">
+                        <div class="flex flex-col">
+                            <span class="text-[10px] text-gray-500 font-semibold flex items-center gap-1">
+                                <span
+                                    class="material-symbols-outlined text-green-700 text-sm">humidity_percentage</span>
+                                Humidity
+                            </span>
+                            <span id="humidity" class="text-lg md:text-xl font-bold text-gray-900 mt-0.5">--%</span>
+                        </div>
+                        <div class="flex flex-col">
+                            <span class="text-[10px] text-gray-500 font-semibold flex items-center gap-1">
+                                <span class="material-symbols-outlined text-green-700 text-sm">air</span> Wind
+                            </span>
+                            <span id="windSpeed" class="text-lg md:text-xl font-bold text-gray-900 mt-0.5">--
+                                km/h</span>
+                        </div>
+                        <div class="flex flex-col">
+                            <span class="text-[10px] text-gray-500 font-semibold flex items-center gap-1">
+                                <span class="material-symbols-outlined text-green-700 text-sm">device_thermostat</span>
+                                Feels Like
+                            </span>
+                            <span id="feelsLike" class="text-lg md:text-xl font-bold text-gray-900 mt-0.5">--°C</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Farming Impact / Recommendations Section -->
+            <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-150 flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center gap-2 mb-4">
+                        <span class="material-symbols-outlined text-green-700 font-bold"
+                            style="font-variation-settings: 'FILL' 1;">psychiatry</span>
+                        <h3 class="text-base font-bold text-gray-900">Farming Impact</h3>
+                    </div>
+                    <div id="recommendationsContainer" class="space-y-3 max-h-[220px] overflow-y-auto pr-1">
+                        <!-- Populated dynamically -->
+                    </div>
+                </div>
+                <div class="text-[10px] text-gray-400 mt-4 border-t border-gray-100 pt-3 flex justify-between">
+                    <span id="lastUpdated">Updated: --</span>
+                    <span>Kisan Sathi Advisory</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Precipitation Chart & Details -->
+        <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
+            <!-- Precipitation Line Chart -->
+            <div
+                class="lg:col-span-3 bg-white rounded-2xl p-6 shadow-sm border border-gray-150 flex flex-col justify-between">
+                <div class="flex justify-between items-center mb-4">
+                    <div>
+                        <h3 class="text-base font-bold text-gray-900">Precipitation Probability</h3>
+                        <p class="text-[11px] text-gray-400">Next 24-hour forecast trend</p>
+                    </div>
+                    <span
+                        class="flex items-center gap-1 text-[10px] font-semibold text-green-700 bg-green-50 px-2.5 py-1 rounded-full">
+                        <span class="w-1.5 h-1.5 rounded-full bg-green-600 animate-pulse"></span> Prob %
+                    </span>
+                </div>
+                <div class="chart-container">
+                    <canvas id="precipitationChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Extra Weather Details -->
+            <div class="lg:col-span-2 bg-white rounded-2xl p-6 shadow-sm border border-gray-150">
+                <h3 class="text-base font-bold text-gray-900 mb-4">Atmospheric Metrics</h3>
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="p-3 bg-gray-50 rounded-xl flex items-center gap-3">
+                        <span
+                            class="material-symbols-outlined text-blue-500 bg-blue-50 p-2 rounded-lg text-lg">speed</span>
+                        <div>
+                            <p class="text-[10px] text-gray-400 font-semibold">Pressure</p>
+                            <p id="pressureDetail" class="text-xs font-bold text-gray-800">-- hPa</p>
+                        </div>
+                    </div>
+                    <div class="p-3 bg-gray-50 rounded-xl flex items-center gap-3">
+                        <span
+                            class="material-symbols-outlined text-amber-500 bg-amber-50 p-2 rounded-lg text-lg">visibility</span>
+                        <div>
+                            <p class="text-[10px] text-gray-400 font-semibold">Visibility</p>
+                            <p id="visibilityDetail" class="text-xs font-bold text-gray-800">-- km</p>
+                        </div>
+                    </div>
+                    <div class="p-3 bg-gray-50 rounded-xl flex items-center gap-3">
+                        <span
+                            class="material-symbols-outlined text-orange-500 bg-orange-50 p-2 rounded-lg text-lg">wb_sunny</span>
+                        <div>
+                            <p class="text-[10px] text-gray-400 font-semibold">Sunrise</p>
+                            <p id="sunriseDetail" class="text-xs font-bold text-gray-800">--:--</p>
+                        </div>
+                    </div>
+                    <div class="p-3 bg-gray-50 rounded-xl flex items-center gap-3">
+                        <span
+                            class="material-symbols-outlined text-indigo-500 bg-indigo-50 p-2 rounded-lg text-lg">wb_twilight</span>
+                        <div>
+                            <p class="text-[10px] text-gray-400 font-semibold">Sunset</p>
+                            <p id="sunsetDetail" class="text-xs font-bold text-gray-800">--:--</p>
+                        </div>
+                    </div>
+                    <div class="p-3 bg-gray-50 rounded-xl flex items-center gap-3 col-span-2">
+                        <span
+                            class="material-symbols-outlined text-gray-500 bg-gray-100 p-2 rounded-lg text-lg">cloud</span>
+                        <div>
+                            <p class="text-[10px] text-gray-400 font-semibold">Cloud Coverage</p>
+                            <p id="cloudsDetail" class="text-xs font-bold text-gray-800">--%</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 7-Day Forecast -->
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-150">
+            <h3 class="text-base font-bold text-gray-900 mb-4 flex items-center gap-2">
+                <span class="material-symbols-outlined text-green-700">calendar_month</span>
+                7-Day Forecast
+            </h3>
+            <div id="forecastContainer" class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-4">
+                <!-- Populated dynamically -->
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let searchTimeout;
+    let abortController = null;
+    let weatherChart = null;
+
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', function () {
+        setupEventListeners();
+        loadLastViewedWeather(); // NEW: Load persisted weather on page load
+    });
+
+    // NEW: LocalStorage functions for persistence
+    function saveWeatherToStorage(weatherData, location) {
+        const weatherSession = {
+            location: location,
+            weather: weatherData,
+            timestamp: new Date().toISOString(),
+            lat: weatherData.lat || null,
+            lon: weatherData.lon || null
+        };
+        localStorage.setItem('kisan_last_weather', JSON.stringify(weatherSession));
+    }
+
+    function getWeatherFromStorage() {
+        const stored = localStorage.getItem('kisan_last_weather');
+        if (!stored) return null;
+        
+        try {
+            const parsed = JSON.parse(stored);
+            // Check if data is less than 30 minutes old
+            const dataAge = Date.now() - new Date(parsed.timestamp).getTime();
+            if (dataAge < 30 * 60 * 1000) { // 30 minutes
+                return parsed;
+            }
+            return null;
+        } catch (e) {
+            return null;
+        }
+    }
+
+    function loadLastViewedWeather() {
+        const stored = getWeatherFromStorage();
+        
+        if (stored && stored.weather) {
+            // Display cached weather immediately
+            displayWeatherData(stored.weather);
+            document.getElementById('welcomeContainer').classList.add('hidden');
+            document.getElementById('weatherContent').classList.remove('hidden');
+            document.getElementById('weatherContent').style.opacity = '1';
+            
+            // Show "Refreshing..." indicator
+            const cityName = document.getElementById('cityName');
+            const originalText = cityName.textContent;
+            cityName.innerHTML = `${originalText} <span class="text-xs text-green-600 animate-pulse">• Refreshing...</span>`;
+            
+            // Refresh data in background
+            setTimeout(() => {
+                if (stored.lat && stored.lon) {
+                    loadWeatherData(null, stored.lat, stored.lon, stored.location, true);
+                } else if (stored.location) {
+                    triggerSearchButton(stored.location, true);
+                }
+            }, 100);
+        }
+    }
+
+    function setupEventListeners() {
+        // Search input with debounce
+        document.getElementById('citySearch').addEventListener('input', function (e) {
+            clearTimeout(searchTimeout);
+            const query = e.target.value.trim();
+
+            if (query.length < 2) {
+                document.getElementById('searchSuggestions').classList.add('hidden');
+                return;
+            }
+
+            searchTimeout = setTimeout(() => {
+                searchCities(query);
+            }, 300);
+        });
+
+        // Search button
+        document.getElementById('searchBtn').addEventListener('click', function () {
+            const city = document.getElementById('citySearch').value.trim();
+            if (city) {
+                triggerSearchButton(city);
+            }
+        });
+
+        // Enter key on search
+        document.getElementById('citySearch').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                const city = e.target.value.trim();
+                if (city) {
+                    triggerSearchButton(city);
+                }
+            }
+        });
+
+        // Detect location
+        document.getElementById('detectLocationBtn').addEventListener('click', detectLocation);
+
+        // Hide suggestions when clicking outside
+        document.addEventListener('click', function (e) {
+            const suggestions = document.getElementById('searchSuggestions');
+            const searchInput = document.getElementById('citySearch');
+            if (e.target !== suggestions && e.target !== searchInput) {
+                suggestions.classList.add('hidden');
+            }
+        });
+    }
+
+    async function searchCities(query) {
+        try {
+            const response = await fetch(`/weather/api/search/?q=${encodeURIComponent(query)}`);
+            const data = await response.json();
+
+            if (data.success && data.cities && data.cities.length > 0) {
+                displaySearchSuggestions(data.cities);
+            } else {
+                document.getElementById('searchSuggestions').classList.add('hidden');
+            }
+        } catch (error) {
+            console.error('City search error:', error);
+        }
+    }
+
+    function displaySearchSuggestions(cities) {
+        const container = document.getElementById('searchSuggestions');
+        container.innerHTML = cities.map(city => {
+            const districtStr = city.district ? city.district : '';
+            const stateStr = city.state ? city.state : '';
+            const countryStr = city.country ? city.country : '';
+            const subparts = [districtStr, stateStr, countryStr].filter(Boolean).join(', ');
+            
+            const nameEscaped = city.name.replace(/'/g, "\\'");
+            const subpartsEscaped = subparts.replace(/'/g, "\\'");
+            
+            return `
+            <div class="px-4 py-3 hover:bg-green-50 cursor-pointer transition flex items-center gap-3 border-b border-gray-50 last:border-b-0"
+                 onclick="selectCity('${nameEscaped}', '${subpartsEscaped}', ${city.lat}, ${city.lon})">
+                <span class="material-symbols-outlined text-green-700">location_on</span>
+                <div>
+                    <p class="font-semibold text-gray-800 text-sm">${city.name}</p>
+                    <p class="text-xs text-gray-400">${subparts}</p>
+                </div>
+            </div>
+            `;
+        }).join('');
+        container.classList.remove('hidden');
+    }
+
+    function selectCity(name, subdetails, lat, lon) {
+        const fullDisplay = subdetails ? `${name}, ${subdetails}` : name;
+        document.getElementById('citySearch').value = fullDisplay;
+        document.getElementById('searchSuggestions').classList.add('hidden');
+        loadWeatherData(null, lat, lon, fullDisplay);
+    }
+
+    async function triggerSearchButton(query, isBackgroundRefresh = false) {
+        if (!isBackgroundRefresh) {
+            showLoading();
+        }
+        clearError();
+        document.getElementById('searchSuggestions').classList.add('hidden');
+        try {
+            const response = await fetch(`/weather/api/search/?q=${encodeURIComponent(query)}`);
+            const data = await response.json();
+
+            if (data.success && data.cities && data.cities.length > 0) {
+                const city = data.cities[0];
+                const subdetails = [city.district, city.state, city.country].filter(Boolean).join(', ');
+                const fullDisplay = subdetails ? `${city.name}, ${subdetails}` : city.name;
+                document.getElementById('citySearch').value = fullDisplay;
+                loadWeatherData(null, city.lat, city.lon, fullDisplay, isBackgroundRefresh);
+            } else {
+                hideLoading();
+                showError("Location not found. Try a nearby village, town, district, or city.");
+            }
+        } catch (error) {
+            console.error('Search error:', error);
+            hideLoading();
+            showError("Location not found. Try a nearby village, town, district, or city.");
+        }
+    }
+
+    function detectLocation() {
+        if (!navigator.geolocation) {
+            showError('Geolocation is not supported by your browser');
+            return;
+        }
+
+        const btn = document.getElementById('detectLocationBtn');
+        btn.innerHTML = '<span class="material-symbols-outlined animate-spin text-sm">progress_activity</span> Detecting...';
+        btn.disabled = true;
+        clearError();
+
+        navigator.geolocation.getCurrentPosition(
+            position => {
+                loadWeatherData(null, position.coords.latitude, position.coords.longitude);
+                btn.innerHTML = '<span class="material-symbols-outlined text-sm">my_location</span> Detect My Location';
+                btn.disabled = false;
+            },
+            error => {
+                showError('Unable to detect location. Please search manually.');
+                btn.innerHTML = '<span class="material-symbols-outlined text-sm">my_location</span> Detect My Location';
+                btn.disabled = false;
+            }
+        );
+    }
+
+    function showError(message) {
+        const errorBanner = document.getElementById('errorBanner');
+        const errorMessage = document.getElementById('errorMessage');
+        errorMessage.textContent = message;
+        errorBanner.classList.remove('hidden');
+        
+        document.getElementById('weatherContent').classList.add('hidden');
+        document.getElementById('welcomeContainer').classList.remove('hidden');
+    }
+    
+    function clearError() {
+        document.getElementById('errorBanner').classList.add('hidden');
+    }
+
+    async function loadWeatherData(city = null, lat = null, lon = null, location_name = null, isBackgroundRefresh = false) {
+        if (abortController) {
+            abortController.abort();
+        }
+        abortController = new AbortController();
+
+        clearError();
+        
+        // Only show loading skeleton if not background refresh
+        if (!isBackgroundRefresh) {
+            showLoading();
+        }
+
+        try {
+            let params = new URLSearchParams();
+            if (city) {
+                params.append('city', city);
+            } else if (lat && lon) {
+                params.append('lat', lat);
+                params.append('lon', lon);
+                if (location_name) {
+                    params.append('location_name', location_name);
+                }
+            }
+
+            const [weatherResponse, forecastResponse] = await Promise.all([
+                fetch(`/weather/api/current/?${params}`, { signal: abortController.signal }),
+                fetch(`/weather/api/forecast/?${params}`, { signal: abortController.signal })
+            ]);
+
+            const weatherData = await weatherResponse.json();
+            const forecastData = await forecastResponse.json();
+
+            if (weatherData.success && weatherData.weather) {
+                displayWeatherData(weatherData.weather);
+                displayRecommendations(weatherData.recommendations);
+                
+                // NEW: Save weather to localStorage
+                const locationDisplay = location_name || `${weatherData.weather.city}, ${weatherData.weather.country}`;
+                saveWeatherToStorage(weatherData.weather, locationDisplay);
+                
+                document.getElementById('welcomeContainer').classList.add('hidden');
+                document.getElementById('weatherContent').classList.remove('hidden');
+                document.getElementById('weatherContent').style.opacity = '1';
+            } else {
+                showError("Location not found. Try a nearby village, town, district, or city.");
+            }
+
+            if (forecastData.success && forecastData.forecast) {
+                displayForecast(forecastData.forecast.daily);
+
+                const hourlyPrecip = forecastData.forecast.hourly_precipitation;
+                if (hourlyPrecip && hourlyPrecip.length > 0) {
+                    const labels = hourlyPrecip.map(item => item.time);
+                    const chartData = hourlyPrecip.map(item => item.pop);
+                    initPrecipitationChart(labels, chartData);
+                }
+            }
+
+            hideLoading();
+
+        } catch (error) {
+            if (error.name !== 'AbortError') {
+                console.error('Weather fetch error:', error);
+                hideLoading();
+                showError("Location not found. Try a nearby village, town, district, or city.");
+            }
+        }
+    }
+
+    function showLoading() {
+        document.getElementById('loadingSkeleton').classList.remove('hidden');
+        document.getElementById('weatherContent').classList.add('hidden');
+        document.getElementById('welcomeContainer').classList.add('hidden');
+    }
+
+    function hideLoading() {
+        document.getElementById('loadingSkeleton').classList.add('hidden');
+    }
+
+    function displayWeatherData(weather) {
+        document.getElementById('cityName').textContent = `${weather.city}, ${weather.country}`;
+        document.getElementById('weatherDescription').textContent = weather.description;
+        document.getElementById('lastUpdated').textContent = `Updated: ${weather.timestamp}`;
+
+        document.getElementById('temperature').textContent = weather.temperature;
+        document.getElementById('feelsLike').textContent = weather.feels_like;
+        document.getElementById('humidity').textContent = weather.humidity + '%';
+        document.getElementById('windSpeed').textContent = weather.wind_speed + ' km/h';
+
+        document.getElementById('weatherIcon').textContent = getWeatherEmoji(weather.icon);
+
+        document.getElementById('pressureDetail').textContent = weather.pressure + ' hPa';
+        document.getElementById('visibilityDetail').textContent = weather.visibility + ' km';
+        document.getElementById('sunriseDetail').textContent = weather.sunrise;
+        document.getElementById('sunsetDetail').textContent = weather.sunset;
+        document.getElementById('cloudsDetail').textContent = weather.clouds + '%';
+
+        document.getElementById('citySearch').value = `${weather.city}, ${weather.country}`;
+
+        updateWeatherCardGradient(weather.main);
+    }
+
+    function displayForecast(forecast) {
+        const container = document.getElementById('forecastContainer');
+        container.innerHTML = forecast.map(day => `
+        <div class="bg-gray-50 border border-gray-100 p-4 rounded-xl text-center hover:shadow-md transition-all duration-200 transform hover:-translate-y-1">
+            <p class="font-bold text-gray-700 mb-1 text-sm">${day.day}</p>
+            <div class="text-3xl mb-1.5">${getWeatherEmoji(day.icon)}</div>
+            <p class="text-xs text-gray-500 mb-2 truncate" title="${day.condition}">${day.condition}</p>
+            <div class="flex justify-center gap-1.5 text-xs">
+                <span class="font-bold text-red-650" style="color: #ba1a1a;">${day.temp_max}°</span>
+                <span class="text-gray-400">/</span>
+                <span class="font-bold text-green-700" style="color: #0f5238;">${day.temp_min}°</span>
+            </div>
+        </div>
+    `).join('');
+    }
+
+    function displayRecommendations(recs) {
+        const container = document.getElementById('recommendationsContainer');
+
+        if (!recs || recs.length === 0) {
+            container.innerHTML = `
+            <div class="p-3 rounded-lg border border-green-200 bg-green-50 text-green-800 flex gap-2.5 items-start farming-impact-card">
+                <span class="material-symbols-outlined text-green-700">check_circle</span>
+                <div>
+                    <p class="font-bold text-xs">Optimal Conditions</p>
+                    <p class="text-[11px] text-green-700/90 leading-tight">No warning alerts. Ideal weather conditions for standard farming operations.</p>
+                </div>
+            </div>
+        `;
+            return;
+        }
+
+        const typeStyles = {
+            'warning': 'bg-red-50 border-red-200 text-red-800 border-l-4 border-l-red-600',
+            'caution': 'bg-amber-50 border-amber-200 text-amber-800 border-l-4 border-l-amber-500',
+            'info': 'bg-blue-50 border-blue-200 text-blue-800 border-l-4 border-l-blue-500',
+            'success': 'bg-green-50 border-green-200 text-green-800 border-l-4 border-l-green-600'
+        };
+
+        container.innerHTML = recs.map(rec => `
+        <div class="p-3 rounded-lg border flex gap-3 items-start farming-impact-card ${typeStyles[rec.type] || 'bg-gray-50 border-gray-200'}">
+            <span class="material-symbols-outlined text-lg">${rec.icon}</span>
+            <div>
+                <p class="font-bold text-xs">${rec.title}</p>
+                <p class="text-[11px] leading-tight opacity-90">${rec.message}</p>
+            </div>
+        </div>
+    `).join('');
+    }
+
+    function getWeatherEmoji(icon) {
+        const iconMap = {
+            '01d': '☀️', '01n': '🌙',
+            '02d': '⛅', '02n': '☁️',
+            '03d': '☁️', '03n': '☁️',
+            '04d': '☁️', '04n': '☁️',
+            '09d': '🌧️', '09n': '🌧️',
+            '10d': '🌦️', '10n': '🌧️',
+            '11d': '⛈️', '11n': '⛈️',
+            '13d': '❄️', '13n': '❄️',
+            '50d': '🌫️', '50n': '🌫️'
+        };
+        return iconMap[icon] || '☀️';
+    }
+
+    function updateWeatherCardGradient(condition) {
+        const card = document.getElementById('currentWeatherCard');
+        const gradients = {
+            'Clear': 'linear-gradient(135deg, #e8fff0 0%, #ccf8df 100%)',
+            'Clouds': 'linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%)',
+            'Rain': 'linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%)',
+            'Drizzle': 'linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%)',
+            'Thunderstorm': 'linear-gradient(135deg, #f5f3ff 0%, #ddd6fe 100%)',
+            'Snow': 'linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)',
+            'Mist': 'linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%)',
+            'Fog': 'linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%)'
+        };
+
+        card.style.background = gradients[condition] || 'linear-gradient(135deg, #e8fff0 0%, #ccf8df 100%)';
+    }
+
+    function initPrecipitationChart(labels, data) {
+        const ctx = document.getElementById('precipitationChart').getContext('2d');
+        if (weatherChart) {
+            weatherChart.destroy();
+        }
+
+        const gradient = ctx.createLinearGradient(0, 0, 0, 200);
+        gradient.addColorStop(0, 'rgba(15, 82, 56, 0.3)');
+        gradient.addColorStop(1, 'rgba(15, 82, 56, 0.0)');
+
+        weatherChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Precipitation Probability (%)',
+                    data: data,
+                    borderColor: '#0f5238',
+                    borderWidth: 2,
+                    backgroundColor: gradient,
+                    fill: true,
+                    tension: 0.4,
+                    pointBackgroundColor: '#0f5238',
+                    pointBorderColor: '#fff',
+                    pointHoverRadius: 6,
+                    pointRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function (context) {
+                                return `Probability: ${context.parsed.y}%`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100,
+                        grid: {
+                            color: 'rgba(243, 244, 246, 1)'
+                        },
+                        ticks: {
+                            callback: function (value) {
+                                return value + '%';
+                            },
+                            font: {
+                                size: 10
+                            }
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        },
+                        ticks: {
+                            font: {
+                                size: 10
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+</script>
+{% endblock %}

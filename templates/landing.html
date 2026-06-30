@@ -1,0 +1,227 @@
+{% extends 'base.html' %}
+
+{% block title %}Welcome to Kisan Sathi - Smart Farming Platform{% endblock %}
+
+{% block content %}
+<!-- Navigation Bar -->
+<nav class="bg-white shadow-lg sticky top-0 z-50">
+    <div class="container mx-auto px-4 md:px-6 py-3 md:py-4">
+        <div class="flex justify-between items-center">
+            <div class="flex items-center gap-2 md:gap-3">
+                <span class="text-2xl md:text-4xl">🌾</span>
+                <span class="text-xl md:text-3xl font-bold text-green-800">Kisan Sathi</span>
+            </div>
+
+            <!-- Desktop Menu -->
+            <div class="hidden md:flex items-center gap-6 lg:gap-8">
+                <a href="#features" class="text-gray-700 hover:text-green-600 font-semibold">Features</a>
+                <a href="#about" class="text-gray-700 hover:text-green-600 font-semibold">About</a>
+                <a href="#contact" class="text-gray-700 hover:text-green-600 font-semibold">Contact</a>
+            </div>
+
+            <!-- Desktop Auth Buttons -->
+            <div class="hidden md:flex gap-3 lg:gap-4">
+                {% if user.is_authenticated %}
+                <a href="{% url 'dashboard:home' %}"
+                    class="bg-green-600 text-white px-4 lg:px-6 py-2 rounded-full hover:bg-green-700 transition font-semibold text-sm lg:text-base">Dashboard</a>
+                <a href="{% url 'accounts:logout' %}"
+                    class="bg-gray-600 text-white px-4 lg:px-6 py-2 rounded-full hover:bg-gray-700 transition font-semibold text-sm lg:text-base">Logout</a>
+                {% else %}
+                <a href="{% url 'accounts:login' %}"
+                    class="bg-green-600 text-white px-4 lg:px-6 py-2 rounded-full hover:bg-green-700 transition font-semibold text-sm lg:text-base">Login</a>
+                <a href="{% url 'accounts:signup' %}"
+                    class="bg-emerald-600 text-white px-4 lg:px-6 py-2 rounded-full hover:bg-emerald-700 transition font-semibold text-sm lg:text-base">Sign
+                    Up</a>
+                {% endif %}
+            </div>
+
+            <!-- Mobile Menu Button -->
+            <button id="mobileNavBtn" class="md:hidden text-gray-700 hover:text-green-600 focus:outline-none">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16">
+                    </path>
+                </svg>
+            </button>
+        </div>
+
+        <!-- Mobile Menu -->
+        <div id="mobileNav" class="hidden md:hidden mt-4 pb-4 border-t pt-4">
+            <div class="flex flex-col space-y-3">
+                <a href="#features" class="text-gray-700 hover:text-green-600 font-semibold py-2">Features</a>
+                <a href="#about" class="text-gray-700 hover:text-green-600 font-semibold py-2">About</a>
+                <a href="#contact" class="text-gray-700 hover:text-green-600 font-semibold py-2">Contact</a>
+                {% if user.is_authenticated %}
+                <a href="{% url 'dashboard:home' %}"
+                    class="bg-green-600 text-white px-4 py-2 rounded-full hover:bg-green-700 transition font-semibold text-center">Dashboard</a>
+                <a href="{% url 'accounts:logout' %}"
+                    class="bg-gray-600 text-white px-4 py-2 rounded-full hover:bg-gray-700 transition font-semibold text-center">Logout</a>
+                {% else %}
+                <a href="{% url 'accounts:login' %}"
+                    class="bg-green-600 text-white px-4 py-2 rounded-full hover:bg-green-700 transition font-semibold text-center">Login</a>
+                <a href="{% url 'accounts:signup' %}"
+                    class="bg-emerald-600 text-white px-4 py-2 rounded-full hover:bg-emerald-700 transition font-semibold text-center">Sign
+                    Up</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</nav>
+
+<script>
+    document.getElementById('mobileNavBtn').addEventListener('click', function () {
+        document.getElementById('mobileNav').classList.toggle('hidden');
+    });
+</script>
+
+<!-- Hero Section -->
+<section class="bg-gradient-to-br from-green-50 to-emerald-100 py-12 md:py-20">
+    <div class="container mx-auto px-4 md:px-6 text-center">
+        <h1 class="text-3xl md:text-5xl lg:text-6xl font-bold text-green-800 mb-4 md:mb-6">🌾 Kisan Sathi</h1>
+        <h2 class="text-2xl md:text-3xl lg:text-4xl text-gray-700 mb-4 md:mb-6">Smart Farming Platform</h2>
+        <p class="text-base md:text-lg lg:text-xl text-gray-600 mb-6 md:mb-10 max-w-3xl mx-auto px-4">
+            Empowering farmers with AI-powered agricultural intelligence.
+            Get real-time insights, disease detection, and expert advice.
+        </p>
+        {% if not user.is_authenticated %}
+        <div class="flex flex-col sm:flex-row gap-4 md:gap-6 justify-center px-4">
+            <a href="{% url 'accounts:signup' %}"
+                class="bg-green-600 text-white px-6 md:px-10 py-3 md:py-4 rounded-full hover:bg-green-700 transition text-base md:text-xl font-bold shadow-xl transform hover:scale-105">
+                Get Started Free
+            </a>
+            <a href="#features"
+                class="bg-white text-green-600 px-6 md:px-10 py-3 md:py-4 rounded-full hover:bg-gray-50 transition text-base md:text-xl font-bold shadow-xl border-2 border-green-600 transform hover:scale-105">
+                Learn More
+            </a>
+        </div>
+        {% else %}
+        <a href="{% url 'dashboard:home' %}"
+            class="inline-block bg-green-600 text-white px-6 md:px-10 py-3 md:py-4 rounded-full hover:bg-green-700 transition text-base md:text-xl font-bold shadow-xl transform hover:scale-105">
+            Go to Dashboard
+        </a>
+        {% endif %}
+    </div>
+</section>
+
+<!-- Features Section -->
+<section id="features" class="py-12 md:py-20 bg-white">
+    <div class="container mx-auto px-4 md:px-6">
+        <h2 class="text-3xl md:text-4xl font-bold text-center text-green-800 mb-10 md:mb-16">Our Features</h2>
+        <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-10">
+            <div
+                class="bg-gradient-to-br from-green-50 to-green-100 p-6 md:p-8 rounded-2xl shadow-lg hover:shadow-2xl transition transform hover:-translate-y-2">
+                <div
+                    class="flex items-center justify-center w-16 h-16 md:w-20 md:h-20 bg-green-600 rounded-full mb-4 md:mb-6 mx-auto">
+                    <span class="material-symbols-outlined text-4xl md:text-5xl text-white">dashboard</span>
+                </div>
+                <h3 class="text-xl md:text-2xl font-bold text-green-800 mb-3 md:mb-4 text-center">Smart Dashboard</h3>
+                <p class="text-gray-700 text-center text-sm md:text-base">Comprehensive farm analytics with real-time
+                    monitoring and insights</p>
+            </div>
+            <div
+                class="bg-gradient-to-br from-red-50 to-red-100 p-6 md:p-8 rounded-2xl shadow-lg hover:shadow-2xl transition transform hover:-translate-y-2">
+                <div
+                    class="flex items-center justify-center w-16 h-16 md:w-20 md:h-20 bg-red-600 rounded-full mb-4 md:mb-6 mx-auto">
+                    <span class="material-symbols-outlined text-4xl md:text-5xl text-white">psychiatry</span>
+                </div>
+                <h3 class="text-xl md:text-2xl font-bold text-red-800 mb-3 md:mb-4 text-center">Disease Detector</h3>
+                <p class="text-gray-700 text-center text-sm md:text-base">Instant crop disease detection using computer
+                    vision</p>
+            </div>
+
+            <div
+                class="bg-gradient-to-br from-blue-50 to-blue-100 p-6 md:p-8 rounded-2xl shadow-lg hover:shadow-2xl transition transform hover:-translate-y-2">
+                <div
+                    class="flex items-center justify-center w-16 h-16 md:w-20 md:h-20 bg-blue-600 rounded-full mb-4 md:mb-6 mx-auto">
+                    <span class="material-symbols-outlined text-4xl md:text-5xl text-white">sunny</span>
+                </div>
+                <h3 class="text-xl md:text-2xl font-bold text-blue-800 mb-3 md:mb-4 text-center">Weather Forecast</h3>
+                <p class="text-gray-700 text-center text-sm md:text-base">Accurate weather predictions with farming
+                    impact analysis</p>
+            </div>
+
+            <div
+                class="bg-gradient-to-br from-purple-50 to-purple-100 p-6 md:p-8 rounded-2xl shadow-lg hover:shadow-2xl transition transform hover:-translate-y-2">
+                <div
+                    class="flex items-center justify-center w-16 h-16 md:w-20 md:h-20 bg-purple-600 rounded-full mb-4 md:mb-6 mx-auto">
+                    <span class="material-symbols-outlined text-4xl md:text-5xl text-white">smart_toy</span>
+                </div>
+                <h3 class="text-xl md:text-2xl font-bold text-purple-800 mb-3 md:mb-4 text-center">AI Chatbot</h3>
+                <p class="text-gray-700 text-center text-sm md:text-base">24/7 farming assistant powered by artificial
+                    intelligence</p>
+            </div>
+
+            <div
+                class="bg-gradient-to-br from-teal-50 to-teal-100 p-6 md:p-8 rounded-2xl shadow-lg hover:shadow-2xl transition transform hover:-translate-y-2">
+                <div
+                    class="flex items-center justify-center w-16 h-16 md:w-20 md:h-20 bg-teal-600 rounded-full mb-4 md:mb-6 mx-auto">
+                    <span class="material-symbols-outlined text-4xl md:text-5xl text-white">agriculture</span>
+                </div>
+                <h3 class="text-xl md:text-2xl font-bold text-teal-800 mb-3 md:mb-4 text-center">Farm Management</h3>
+                <p class="text-gray-700 text-center text-sm md:text-base">Complete farm operations and resource
+                    management</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- About Section -->
+<section id="about" class="py-12 md:py-20 bg-gradient-to-br from-green-50 to-emerald-100">
+    <div class="container mx-auto px-4 md:px-6">
+        <div class="max-w-4xl mx-auto text-center">
+            <h2 class="text-3xl md:text-4xl font-bold text-green-800 mb-6 md:mb-8">About Kisan Sathi</h2>
+            <p class="text-base md:text-xl text-gray-700 mb-4 md:mb-6">
+                Kisan Sathi is a revolutionary smart farming platform that combines cutting-edge AI technology
+                with traditional agricultural wisdom to help farmers make data-driven decisions.
+            </p>
+            <p class="text-sm md:text-lg text-gray-600">
+                Our mission is to empower farmers with tools that increase productivity, reduce costs,
+                and promote sustainable farming practices through intelligent automation and insights.
+            </p>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="py-12 md:py-20 bg-green-600 text-white">
+    <div class="container mx-auto px-4 md:px-6 text-center">
+        <h2 class="text-2xl md:text-4xl font-bold mb-4 md:mb-6">Ready to Transform Your Farming?</h2>
+        <p class="text-base md:text-xl mb-6 md:mb-10"></p>
+        {% if not user.is_authenticated %}
+        <a href="{% url 'accounts:signup' %}"
+            class="inline-block bg-white text-green-600 px-6 md:px-10 py-3 md:py-4 rounded-full hover:bg-gray-100 transition text-base md:text-xl font-bold shadow-xl transform hover:scale-105">
+            Start Free Today
+        </a>
+        {% endif %}
+    </div>
+</section>
+
+<!-- Footer -->
+<footer class="bg-gray-900 text-white py-8 md:py-12">
+    <div class="container mx-auto px-4 md:px-6">
+        <div class="grid sm:grid-cols-2 md:grid-cols-3 gap-6 md:gap-8 mb-6 md:mb-8">
+            <div>
+                <h3 class="text-xl md:text-2xl font-bold mb-3 md:mb-4">🌾 Kisan Sathi</h3>
+                <p class="text-gray-400 text-sm md:text-base">Smart Farming Platform</p>
+            </div>
+            <div>
+                <h4 class="text-base md:text-lg font-bold mb-3 md:mb-4">Quick Links</h4>
+                <ul class="space-y-2">
+                    <li><a href="#features" class="text-gray-400 hover:text-white text-sm md:text-base">Features</a>
+                    </li>
+                    <li><a href="#about" class="text-gray-400 hover:text-white text-sm md:text-base">About</a></li>
+                    <li><a href="{% url 'accounts:login' %}"
+                            class="text-gray-400 hover:text-white text-sm md:text-base">Login</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="text-base md:text-lg font-bold mb-3 md:mb-4">Contact</h4>
+                <p class="text-gray-400 text-sm md:text-base">Email: support@kisansathi.com</p>
+                <p class="text-gray-400 text-sm md:text-base">Phone: +91 1234567890</p>
+            </div>
+        </div>
+        <div class="border-t border-gray-800 pt-6 md:pt-8 text-center text-gray-400 text-sm md:text-base">
+            <p>© 2026 Kisan Sathi. All rights reserved.</p>
+        </div>
+    </div>
+</footer>
+{% endblock %}

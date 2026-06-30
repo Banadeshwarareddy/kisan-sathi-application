@@ -1,0 +1,60 @@
+"""
+apps/crop_disease/ml/model_loader.py
+"""
+import tensorflow as tf
+import os
+
+class DiseaseModel:
+    _instance = None
+    _model = None
+
+    def __new__(cls):
+        if cls._instance is None:
+            cls._instance = super(DiseaseModel, cls).__new__(cls)
+        return cls._instance
+
+    def load_model(self):
+        if self._model is None:
+            # In production, this would load a real .h5 or SavedModel
+            # For development, we might use a mock or a tiny MobileNetV2
+            try:
+                # model_path = os.path.join(settings.BASE_DIR, 'apps/crop_disease/ml/weights/mobilenet_plantvillage.h5')
+                # self._model = tf.keras.models.load_model(model_path)
+                print("Loading mock disease detection model...")
+                self._model = "MOCK_MODEL"
+            except Exception as e:
+                print(f"Error loading model: {e}")
+                self._model = None
+        return self._model
+
+"""
+apps/crop_disease/ml/predictor.py
+"""
+import numpy as np
+from .labels import DISEASE_LABELS
+
+def predict_disease(image_path):
+    # This is a placeholder for actual ML inference
+    # In a real app, you'd use cv2.imread, preprocess, and model.predict()
+    
+    # Mock logic for demonstration
+    mock_results = {
+        'disease_name': 'Tomato___Late_blight',
+        'confidence': 94.5,
+        'treatment': 'Apply copper-based fungicides. Remove and destroy infected plant debris.',
+        'prevention': 'Use resistant varieties. Avoid overhead irrigation to keep foliage dry.'
+    }
+    return mock_results
+
+"""
+apps/crop_disease/ml/labels.py
+"""
+DISEASE_LABELS = [
+    'Apple___Apple_scab', 'Apple___Black_rot', 'Apple___Cedar_apple_rust', 'Apple___healthy',
+    'Corn___Common_rust', 'Corn___Gray_leaf_spot', 'Corn___healthy', 'Corn___Northern_Leaf_Blight',
+    'Grape___Black_rot', 'Grape___Esca_(Black_Measles)', 'Grape___healthy', 'Grape___Leaf_blight_(Isariopsis_Leaf_Spot)',
+    'Potato___Early_blight', 'Potato___healthy', 'Potato___Late_blight',
+    'Tomato___Bacterial_spot', 'Tomato___Early_blight', 'Tomato___healthy', 'Tomato___Late_blight',
+    'Tomato___Leaf_Mold', 'Tomato___Septoria_leaf_spot', 'Tomato___Spider_mites Two-spotted_spider_mite',
+    'Tomato___Target_Spot', 'Tomato___Tomato_mosaic_virus', 'Tomato___Tomato_Yellow_Leaf_Curl_Virus'
+]

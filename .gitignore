@@ -1,0 +1,62 @@
+# Django
+*.log
+*.pot
+*.pyc
+__pycache__/
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+media/
+staticfiles/
+
+# Environment variables - NEVER COMMIT THESE!
+.env
+.env.production
+.env.local
+
+# Python
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# AI Model weights (optional - comment out if you want to include trained model)
+# crop_detector/ml/weights/*.h5
+
+# Dataset (too large for git)
+PlantVillage/
+New Plant Diseases Dataset/
+*.zip
+*.tar.gz
+
+# Dataset
+dataset/ 

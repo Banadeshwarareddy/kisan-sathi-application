@@ -1,0 +1,74 @@
+"""
+apps/weather/services.py
+"""
+import requests
+from django.conf import settings
+from django.core.cache import cache
+
+def get_weather_forecast(city):
+    # Check cache first
+    cache_key = f"weather_{city.lower().replace(' ', '_')}"
+    cached_data = cache.get(cache_key)
+    if cached_data:
+        return cached_data
+
+    api_key = settings.OPENWEATHERMAP_API_KEY
+    # OpenWeatherMap API call (Simplified for demonstration)
+    url = f"https://api.openweathermap.org/data/2.5/forecast?q={city}&units=metric&appid={api_key}"
+    
+    try:
+        # response = requests.get(url)
+        # data = response.json()
+        
+        # Mock data for production-ready logic structure
+        data = {
+            'city': city,
+            'current': {'temp': 28, 'condition': 'Sunny', 'humidity': 45, 'wind': 12},
+            'forecast': [
+                {'day': 'Mon', 'temp': 27, 'condition': 'Partly Cloudy'},
+                {'day': 'Tue', 'temp': 29, 'condition': 'Sunny'},
+                {'day': 'Wed', 'temp': 26, 'condition': 'Rainy'},
+            ]
+        }
+        # Cache for 1 hour
+        cache.set(cache_key, data, 3600)
+        return data
+    except Exception as e:
+        print(f"Weather API Error: {e}")
+        return None
+
+"""
+apps/soil_analyzer/services.py
+"""
+def analyze_soil(n, p, k, ph, moisture):
+    # Rule-based expert system logic
+    recommendations = {
+        'score': 85,
+        'status': 'Healthy',
+        'crops': [
+            {'name': 'Rice', 'compatibility': 'High'},
+            {'name': 'Wheat', 'compatibility': 'Medium'},
+        ],
+        'fertilizers': [
+            {'name': 'Urea', 'quantity': '50kg/acre', 'timing': 'Initial sowing'},
+            {'name': 'DAP', 'quantity': '25kg/acre', 'timing': 'Basal dose'},
+        ]
+    }
+    
+    if ph < 5.5:
+        recommendations['status'] = 'Acidic'
+        recommendations['fertilizers'].append({'name': 'Lime', 'quantity': '200kg/acre', 'timing': 'Soil preparation'})
+    
+    return recommendations
+
+"""
+apps/chatbot/services.py
+"""
+def get_chatbot_response(user_message, session_id, farmer_context=None):
+    # GPT integration logic (Simplified)
+    # system_prompt = "You are Kisan Sathi AI, an expert agriculture assistant..."
+    
+    # Mock bilingual response
+    if "crop" in user_message.lower():
+        return "I recommend checking your soil NPK levels before planting. आप फसल लगाने से पहले अपने मिट्टी के एनपीके स्तर की जांच करें।"
+    return "How can I help you today? मैं आज आपकी कैसे सहायता कर सकता हूँ?"

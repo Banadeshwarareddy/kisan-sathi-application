@@ -1,0 +1,443 @@
+{% extends 'dashboard/base_dashboard.html' %}
+{% load static %}
+
+{% block page_title %}AI Chatbot{% endblock %}
+{% block page_subtitle %}24/7 farming assistant{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Styling for the chatbot UI, light/dark mode support, scrollbars, drawer */
+
+    /* Light mode defaults - ensure text is always visible */
+    .chatbot-container {
+        color: rgb(17 24 39);
+        /* text-gray-900 */
+    }
+
+    .chatbot-container .text-gray-900,
+    .chatbot-container .text-gray-950,
+    .chatbot-container .text-gray-800 {
+        color: rgb(17 24 39) !important;
+        /* text-gray-900 */
+    }
+
+    .chatbot-container .text-gray-700 {
+        color: rgb(55 65 81) !important;
+        /* text-gray-700 */
+    }
+
+    .chatbot-container .text-gray-600 {
+        color: rgb(75 85 99) !important;
+        /* text-gray-600 */
+    }
+
+    .chatbot-container .text-gray-500 {
+        color: rgb(107 114 128) !important;
+        /* text-gray-500 */
+    }
+
+    .chatbot-container .text-gray-400 {
+        color: rgb(156 163 175) !important;
+        /* text-gray-400 */
+    }
+
+    /* AI Starter Cards - Modern ChatGPT Style */
+    .ai-starter-card {
+        position: relative;
+        width: 100%;
+        padding: 1rem;
+        background: linear-gradient(135deg, #ffffff 0%, #f9fafb 100%);
+        border: 1.5px solid #e5e7eb;
+        border-radius: 14px;
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+        text-align: left;
+        overflow: hidden;
+    }
+
+    .ai-starter-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.05) 0%, rgba(5, 150, 105, 0.05) 100%);
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        border-radius: 14px;
+        z-index: 0;
+    }
+
+    .ai-starter-card:hover {
+        transform: translateY(-3px);
+        border-color: #10b981;
+        box-shadow: 0 8px 20px 0 rgba(16, 185, 129, 0.15);
+    }
+
+    .ai-starter-card:hover::before {
+        opacity: 1;
+    }
+
+    .ai-starter-card:active {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px 0 rgba(16, 185, 129, 0.2);
+    }
+
+    .ai-starter-card>div {
+        position: relative;
+        z-index: 1;
+    }
+
+    /* Responsive grid adjustments */
+    @media (max-width: 640px) {
+        .ai-starter-card {
+            padding: 0.875rem;
+        }
+    }
+
+    /* Dark mode overrides */
+    .chatbot-container.dark {
+        --tw-bg-opacity: 1;
+        background-color: rgb(17 24 39 / var(--tw-bg-opacity));
+        /* bg-gray-900 */
+        color: rgb(243 244 246 / var(--tw-bg-opacity));
+        /* text-gray-100 */
+        border-color: rgb(31 41 55 / var(--tw-bg-opacity));
+    }
+
+    .chatbot-container.dark .ai-starter-card {
+        background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+        border-color: #374151;
+    }
+
+    .chatbot-container.dark .ai-starter-card:hover {
+        border-color: #10b981;
+    }
+
+    .chatbot-container.dark .bg-white {
+        background-color: rgb(31 41 55 / var(--tw-bg-opacity)) !important;
+        /* bg-gray-800 */
+    }
+
+    .chatbot-container.dark .text-gray-800 {
+        color: rgb(229 231 235 / var(--tw-bg-opacity)) !important;
+        /* text-gray-200 */
+    }
+
+    .chatbot-container.dark .text-gray-700 {
+        color: rgb(209 213 219 / var(--tw-bg-opacity)) !important;
+        /* text-gray-300 */
+    }
+
+    .chatbot-container.dark .text-gray-950,
+    .chatbot-container.dark .text-gray-900 {
+        color: rgb(249 250 251 / var(--tw-bg-opacity)) !important;
+        /* text-gray-50 */
+    }
+
+    .chatbot-container.dark .text-gray-600 {
+        color: rgb(156 163 175 / var(--tw-bg-opacity)) !important;
+    }
+
+    .chatbot-container.dark .text-gray-550,
+    .chatbot-container.dark .text-gray-500 {
+        color: rgb(156 163 175 / var(--tw-bg-opacity)) !important;
+        /* text-gray-450 */
+    }
+
+    .chatbot-container.dark .text-gray-400 {
+        color: rgb(156 163 175 / var(--tw-bg-opacity)) !important;
+    }
+
+    .chatbot-container.dark .bg-gray-50 {
+        background-color: rgb(17 24 39 / var(--tw-bg-opacity)) !important;
+        /* bg-gray-900 */
+    }
+
+    .chatbot-container.dark .bg-gray-100 {
+        background-color: rgb(31 41 55 / var(--tw-bg-opacity)) !important;
+        /* bg-gray-800 */
+    }
+
+    .chatbot-container.dark .border-gray-200,
+    .chatbot-container.dark .border-t,
+    .chatbot-container.dark .border-b,
+    .chatbot-container.dark .border {
+        border-color: rgb(55 65 81 / var(--tw-bg-opacity)) !important;
+        /* border-gray-700 */
+    }
+
+    .chatbot-container.dark .hover\:bg-gray-100:hover {
+        background-color: rgb(55 65 81 / var(--tw-bg-opacity)) !important;
+    }
+
+    .chatbot-container.dark .hover\:bg-gray-50:hover {
+        background-color: rgb(31 41 55 / var(--tw-bg-opacity)) !important;
+    }
+
+    .chatbot-container.dark input {
+        background-color: rgb(17 24 39 / var(--tw-bg-opacity)) !important;
+        color: white !important;
+        border-color: rgb(55 65 81 / var(--tw-bg-opacity)) !important;
+    }
+
+    /* Custom scrollbar */
+    .chat-scrollbar::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .chat-scrollbar::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .chat-scrollbar::-webkit-scrollbar-thumb {
+        background-color: rgba(156, 163, 175, 0.4);
+        border-radius: 20px;
+    }
+
+    .chatbot-container.dark .chat-scrollbar::-webkit-scrollbar-thumb {
+        background-color: rgba(75, 85, 99, 0.6);
+    }
+</style>
+{% endblock %}
+
+{% block dashboard_content %}
+<div
+    class="chatbot-container h-[calc(100vh-140px)] md:h-[calc(100vh-160px)] flex rounded-2xl overflow-hidden shadow-xl border border-gray-200 bg-white relative transition-colors duration-300">
+
+    <!-- Left Sidebar: Chat History Drawer (Desktop: fixed, Mobile: absolute slide-in) -->
+    <div id="chatHistorySidebar"
+        class="w-72 bg-gray-50 border-r border-gray-200 flex flex-col h-full z-30 transition-transform duration-300 ease-in-out absolute inset-y-0 left-0 -translate-x-full md:relative md:translate-x-0">
+
+        <!-- Sidebar Header: New Chat -->
+        <div class="p-4 border-b border-gray-200 flex flex-col gap-3">
+            <button id="newChatBtn"
+                class="w-full flex items-center justify-center gap-2 bg-purple-600 hover:bg-purple-700 text-white py-3 px-4 rounded-xl font-semibold transition shadow-sm text-sm">
+                <span class="material-symbols-outlined text-lg">add</span>
+                New Chat
+            </button>
+
+            <!-- Sidebar Search -->
+            <div class="relative">
+                <span
+                    class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">search</span>
+                <input id="sidebarSearch" type="text" placeholder="Search chat history..."
+                    class="w-full pl-9 pr-4 py-2 text-xs rounded-lg border border-gray-200 outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500">
+            </div>
+        </div>
+
+        <!-- Previous Conversations List Grouped by Date -->
+        <div id="sessionsListContainer" class="flex-1 overflow-y-auto chat-scrollbar p-3 space-y-4">
+            <div class="animate-pulse space-y-3">
+                <div class="h-4 bg-gray-200 rounded w-1/3"></div>
+                <div class="h-10 bg-gray-200 rounded"></div>
+                <div class="h-10 bg-gray-200 rounded"></div>
+            </div>
+        </div>
+
+        <!-- Sidebar Bottom Info/Settings (Dark mode, statistics, user info) -->
+        <div class="p-4 border-t border-gray-200 bg-white flex flex-col gap-2">
+            <!-- Dark mode toggle -->
+            <button id="themeToggleBtn"
+                class="flex items-center justify-between text-gray-700 hover:bg-gray-100 p-2.5 rounded-lg transition text-xs font-semibold w-full">
+                <div class="flex items-center gap-2">
+                    <span id="themeToggleIcon" class="material-symbols-outlined text-lg">dark_mode</span>
+                    <span id="themeToggleLabel">Dark Mode</span>
+                </div>
+            </button>
+
+            <!-- User stats / info -->
+            <div class="flex items-center gap-3 p-2 bg-purple-50 rounded-xl">
+                <div
+                    class="w-8 h-8 rounded-full bg-purple-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+                    {{ request.user.username|slice:":1"|upper }}
+                </div>
+                <div class="flex-1 min-w-0">
+                    <p class="text-xs font-bold text-gray-900 truncate">{{ request.user.username }}</p>
+                    <p class="text-[10px] text-gray-500 truncate" id="totalMessagesCount">Total Messages: {{
+                        total_messages }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mobile sidebar overlay -->
+    <div id="sidebarOverlay" class="fixed inset-0 bg-black/40 z-20 hidden transition-opacity duration-300"></div>
+
+    <!-- Right Main Chat Window -->
+    <div class="flex-1 flex flex-col h-full overflow-hidden bg-white">
+
+        <!-- Header -->
+        <div class="bg-white border-b border-gray-200 p-4 md:p-6 flex items-center gap-3 z-10">
+            <!-- Hamburger menu for mobile drawer -->
+            <button id="toggleDrawerBtn"
+                class="md:hidden text-gray-600 hover:text-purple-600 focus:outline-none p-1.5 rounded-lg hover:bg-gray-100 transition flex items-center">
+                <span class="material-symbols-outlined text-2xl">menu</span>
+            </button>
+
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center text-purple-700">
+                    <span class="material-symbols-outlined text-2xl"
+                        style="font-variation-settings: 'FILL' 1;">smart_toy</span>
+                </div>
+                <div>
+                    <h3 id="chatSessionTitle"
+                        class="text-base font-bold text-gray-900 truncate max-w-[150px] sm:max-w-xs md:max-w-md">Kisan
+                        AI Assistant</h3>
+                    <p class="text-[11px] text-gray-400 font-medium">Ready to help 24/7</p>
+                </div>
+            </div>
+
+            <div class="ml-auto flex items-center gap-2">
+                <span id="ai-status-badge"
+                    class="text-[10px] bg-green-50 text-green-700 border border-green-200 px-2.5 py-1 rounded-full font-semibold">Online</span>
+            </div>
+        </div>
+
+        <!-- Scrollable Messages Window -->
+        <div id="chat-messages"
+            class="flex-1 p-4 md:p-6 overflow-y-auto bg-gray-50 chat-scrollbar flex flex-col space-y-4">
+            <!-- Suggestion Grid (shown only on new chats / empty sessions) -->
+            <div id="newChatWelcome"
+                class="flex-1 flex flex-col items-center justify-center text-center p-4 md:p-6 space-y-6 max-w-4xl mx-auto">
+                <div
+                    class="w-16 h-16 rounded-full bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center text-white shadow-lg">
+                    <span class="material-symbols-outlined text-4xl"
+                        style="font-variation-settings: 'FILL' 1;">psychiatry</span>
+                </div>
+                <div class="space-y-2">
+                    <h2 class="text-xl md:text-2xl font-black text-gray-900">How can I assist your farming today?</h2>
+                    <p class="text-xs text-gray-500 leading-relaxed max-w-3xl mx-auto">
+                        • 🌱 Crop Advisory • 🐛 Disease & Pest Management • 🧪 Soil Health
+                        Management • 🌾 Fertilizer Recommendations • 💧 Irrigation Guidance • 🌿
+                        Organic Farming
+                    </p>
+                </div>
+
+                <!-- AI Conversation Starter Cards - ChatGPT Style -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 w-full mt-4">
+                    <!-- Card 1: Which crop -->
+                    <button type="button" class="ai-starter-card group"
+                        data-message="Which crop should I grow this season?">
+                        <div class="flex items-center gap-3">
+                            <div
+                                class="w-10 h-10 rounded-xl bg-gradient-to-br from-green-50 to-green-100 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-300">
+                                <span class="text-2xl">🌱</span>
+                            </div>
+                            <p class="text-sm font-semibold text-gray-800 text-left leading-snug flex-1">Which crop
+                                should I grow this season?</p>
+                        </div>
+                    </button>
+
+                    <!-- Card 2: Yellow leaves -->
+                    <button type="button" class="ai-starter-card group"
+                        data-message="My crop leaves are turning yellow">
+                        <div class="flex items-center gap-3">
+                            <div
+                                class="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-50 to-amber-100 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-300">
+                                <span class="text-2xl">🐛</span>
+                            </div>
+                            <p class="text-sm font-semibold text-gray-800 text-left leading-snug flex-1">My crop leaves
+                                are turning yellow</p>
+                        </div>
+                    </button>
+
+                    <!-- Card 3: Fertilizer for paddy -->
+                    <button type="button" class="ai-starter-card group" data-message="Recommend fertilizer for paddy">
+                        <div class="flex items-center gap-3">
+                            <div
+                                class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-300">
+                                <span class="text-2xl">🌾</span>
+                            </div>
+                            <p class="text-sm font-semibold text-gray-800 text-left leading-snug flex-1">Recommend
+                                fertilizer for paddy</p>
+                        </div>
+                    </button>
+
+                    <!-- Card 4: Soil fertility -->
+                    <button type="button" class="ai-starter-card group" data-message="How do I improve soil fertility?">
+                        <div class="flex items-center gap-3">
+                            <div
+                                class="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-50 to-purple-100 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-300">
+                                <span class="text-2xl">🧪</span>
+                            </div>
+                            <p class="text-sm font-semibold text-gray-800 text-left leading-snug flex-1">How do I
+                                improve soil fertility?</p>
+                        </div>
+                    </button>
+
+                    <!-- Card 5: Organic farming -->
+                    <button type="button" class="ai-starter-card group" data-message="Organic farming guide">
+                        <div class="flex items-center gap-3">
+                            <div
+                                class="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-50 to-emerald-100 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-300">
+                                <span class="text-2xl">🌿</span>
+                            </div>
+                            <p class="text-sm font-semibold text-gray-800 text-left leading-snug flex-1">Organic farming
+                                guide</p>
+                        </div>
+                    </button>
+
+                    <!-- Card 6: Water for cotton -->
+                    <button type="button" class="ai-starter-card group" data-message="How much water does cotton need?">
+                        <div class="flex items-center gap-3">
+                            <div
+                                class="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-50 to-cyan-100 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-300">
+                                <span class="text-2xl">💧</span>
+                            </div>
+                            <p class="text-sm font-semibold text-gray-800 text-left leading-snug flex-1">How much water
+                                does cotton need?</p>
+                        </div>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Dynamic Messages Stream -->
+            <div id="messagesStream" class="space-y-6 w-full max-w-4xl mx-auto flex-1 hidden">
+                <!-- Message bubbles loaded here -->
+            </div>
+
+            <!-- Typing indicator -->
+            <div id="typing-indicator" class="hidden gap-3 w-full max-w-4xl mx-auto">
+                <div
+                    class="w-10 h-10 bg-purple-600 rounded-full flex items-center justify-center flex-shrink-0 animate-pulse">
+                    <span class="material-symbols-outlined text-white">smart_toy</span>
+                </div>
+                <div class="bg-white p-4 rounded-lg shadow max-w-md flex items-center gap-3">
+                    <span class="text-gray-600 font-medium animate-pulse">Kisan AI is thinking</span>
+                    <div class="flex gap-1 items-center">
+                        <span class="w-1.5 h-1.5 bg-purple-600 rounded-full animate-bounce"
+                            style="animation-delay: 0ms"></span>
+                        <span class="w-1.5 h-1.5 bg-purple-600 rounded-full animate-bounce"
+                            style="animation-delay: 150ms"></span>
+                        <span class="w-1.5 h-1.5 bg-purple-600 rounded-full animate-bounce"
+                            style="animation-delay: 300ms"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom Input Area -->
+        <div class="p-4 border-t border-gray-200 bg-white z-15">
+            <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+
+            <!-- Contextual suggestions shown here -->
+            <div id="contextSuggestions" class="flex flex-wrap gap-2 mb-3 max-w-4xl mx-auto hidden">
+                <!-- Suggestions generated dynamically -->
+            </div>
+
+            <div class="flex gap-3 max-w-4xl mx-auto relative items-center">
+                <input id="chat-input" type="text" placeholder="Ask Kisan Sathi AI anything about farming..."
+                    class="flex-1 border border-gray-200 rounded-xl pl-4 pr-16 py-3.5 focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none text-sm shadow-sm transition-all">
+                <button id="send-btn"
+                    class="absolute right-2 bg-purple-600 hover:bg-purple-700 text-white w-10 h-10 rounded-lg transition flex items-center justify-center shadow-sm">
+                    <span class="material-symbols-outlined text-lg">send</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="{% static 'js/chatbot.js' %}?v={% now 'U' %}"></script>
+{% endblock %}

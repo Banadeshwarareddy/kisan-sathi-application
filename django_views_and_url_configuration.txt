@@ -1,0 +1,94 @@
+"""
+apps/dashboard/views.py
+"""
+from rest_framework import viewsets
+from rest_framework.response import Response
+from rest_framework.decorators import action
+from rest_framework.permissions import IsAuthenticated
+
+class DashboardViewSet(viewsets.ViewSet):
+    permission_classes = [IsAuthenticated]
+
+    @action(detail=False, methods=['get'])
+    def stats(self, request):
+        # Gather stats from across apps
+        # In a real app, you'd aggregate count() and aggregates
+        data = {
+            'total_farms': 4,
+            'active_crops': 12,
+            'disease_alerts': 2,
+            'soil_reports': 8,
+            'recent_activity': [
+                {'type': 'disease', 'msg': 'Late Blight detected in Sector 4', 'status': 'Urgent'},
+                {'type': 'activity', 'msg': 'Irrigation completed at Farm A', 'status': 'Success'}
+            ]
+        }
+        return Response(data)
+
+"""
+apps/crop_disease/views.py
+"""
+from rest_framework import viewsets, status
+from rest_framework.decorators import action
+from rest_framework.response import Response
+from .models import DiseaseDetection
+from .serializers import DiseaseDetectionSerializer
+from .ml.predictor import predict_disease
+
+class DiseaseDetectionViewSet(viewsets.ModelViewSet):
+    queryset = DiseaseDetection.objects.all()
+    serializer_class = DiseaseDetectionSerializer
+
+    @action(detail=False, methods=['post'])
+    def detect(self, request):
+        image = request.FILES.get('crop_image')
+        if not image:
+            return Response({"error": "No image provided"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Save temporary file or process in memory
+        # In real usage, use a media storage path
+        prediction = predict_disease(image)
+        
+        # Save to DB
+        detection = DiseaseDetection.objects.create(
+            farmer=request.user,
+            crop_image=image,
+            predicted_disease=prediction['disease_name'],
+            confidence_score=prediction['confidence'],
+            treatment_suggestion=prediction['treatment']
+        )
+        
+        return Response(DiseaseDetectionSerializer(detection).data)
+
+"""
+apps/weather/views.py
+"""
+from rest_framework import viewsets
+from rest_framework.response import Response
+from .services import get_weather_forecast
+
+class WeatherViewSet(viewsets.ViewSet):
+    def retrieve(self, request, pk=None): # pk will be city name
+        data = get_weather_forecast(pk)
+        if data:
+            return Response(data)
+        return Response({"error": "Weather data unavailable"}, status=404)
+
+"""
+main urls.py
+"""
+from django.contrib import admin
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+
+router = DefaultRouter()
+router.register(r'disease', DiseaseDetectionViewSet, basename='disease')
+# ... other routers
+
+urlpatterns = [
+    path('admin/', admin.site.urls),
+    path('api/v1/', include(router.urls)),
+    path('api/v1/auth/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('api/v1/auth/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+]

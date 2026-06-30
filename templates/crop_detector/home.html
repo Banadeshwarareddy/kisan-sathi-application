@@ -1,0 +1,1201 @@
+{% extends 'dashboard/base_dashboard.html' %}
+
+{% block page_title %}Crop Disease Detector{% endblock %}
+{% block page_subtitle %}AI-powered disease identification{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Crop Selector Grid - Premium Compact Design */
+    .crop-selector-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+        gap: 12px;
+        max-width: 100%;
+    }
+
+    /* Responsive breakpoints for crop cards */
+    @media (min-width: 1200px) {
+        .crop-selector-grid {
+            grid-template-columns: repeat(7, 1fr);
+        }
+    }
+
+    @media (min-width: 768px) and (max-width: 1199px) {
+        .crop-selector-grid {
+            grid-template-columns: repeat(6, 1fr);
+        }
+    }
+
+    @media (min-width: 640px) and (max-width: 767px) {
+        .crop-selector-grid {
+            grid-template-columns: repeat(4, 1fr);
+        }
+    }
+
+    @media (max-width: 639px) {
+        .crop-selector-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    /* Crop Card Base Styles */
+    .crop-card {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 10px;
+        height: 95px;
+        background: #ffffff;
+        border: 1px solid #E5E7EB;
+        border-radius: 14px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+        transition: all 0.25s ease;
+        cursor: pointer;
+        outline: none;
+    }
+
+    .crop-card:hover {
+        background: #F0FDF4;
+        border-color: #16A34A;
+        box-shadow: 0 6px 20px rgba(22, 163, 74, 0.12);
+        transform: translateY(-3px) scale(1.03);
+    }
+
+    .crop-card:focus-visible {
+        outline: 2px solid #16A34A;
+        outline-offset: 2px;
+    }
+
+    /* Selected Card State */
+    .crop-card-selected {
+        background: #F0FDF4 !important;
+        border: 2px solid #16A34A !important;
+        box-shadow: 0 8px 20px rgba(22, 163, 74, 0.15) !important;
+    }
+
+    .crop-card-selected .crop-name {
+        color: #166534 !important;
+        font-weight: 700 !important;
+    }
+
+    /* Crop Icon */
+    .crop-icon {
+        font-size: 32px;
+        line-height: 1;
+        margin-bottom: 6px;
+        display: block;
+    }
+
+    /* Crop Name */
+    .crop-name {
+        font-size: 14px;
+        font-weight: 600;
+        color: #374151;
+        text-align: center;
+        line-height: 1.2;
+        max-width: 100%;
+        word-wrap: break-word;
+        hyphens: auto;
+    }
+
+    /* Checkmark Badge */
+    .crop-checkmark {
+        position: absolute;
+        top: 6px;
+        right: 6px;
+        width: 20px;
+        height: 20px;
+        background: #16A34A;
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        font-weight: bold;
+        box-shadow: 0 2px 6px rgba(22, 163, 74, 0.3);
+        animation: checkmarkFadeIn 0.3s ease;
+    }
+
+    @keyframes checkmarkFadeIn {
+        from {
+            opacity: 0;
+            transform: scale(0.5);
+        }
+        to {
+            opacity: 1;
+            transform: scale(1);
+        }
+    }
+
+    /* Existing animations */
+    .scanning-line {
+        height: 3px;
+        width: 100%;
+        background: #10b981;
+        position: absolute;
+        top: 0;
+        left: 0;
+        box-shadow: 0 0 12px #10b981;
+        animation: scan 2.5s linear infinite;
+    }
+
+    @keyframes scan {
+        0% {
+            top: 0%;
+        }
+        50% {
+            top: 100%;
+        }
+        100% {
+            top: 0%;
+        }
+    }
+
+    .leaf-spin {
+        animation: rotate-leaf 4s ease-in-out infinite;
+    }
+
+    @keyframes rotate-leaf {
+        0% {
+            transform: rotate(0deg) scale(1);
+        }
+        50% {
+            transform: rotate(180deg) scale(1.1);
+        }
+        100% {
+            transform: rotate(360deg) scale(1);
+        }
+    }
+
+    [x-cloak] {
+        display: none !important;
+    }
+</style>
+{% endblock %}
+
+{% block dashboard_content %}
+<div x-data="cropDetector()" class="max-w-6xl mx-auto space-y-8 pb-16 relative">
+    {% csrf_token %}
+    <!-- Toast notifications -->
+    <div class="fixed bottom-4 right-4 z-50 flex flex-col gap-2 pointer-events-none">
+        <template x-for="toast in toasts" :key="toast.id">
+            <div class="p-4 rounded-xl shadow-xl flex items-center gap-3 transition duration-300 transform translate-y-0 opacity-100 max-w-sm pointer-events-auto"
+                :class="{
+                     'bg-[#0f5238] text-white': toast.type === 'success',
+                     'bg-red-600 text-white': toast.type === 'error',
+                     'bg-blue-600 text-white': toast.type === 'info'
+                 }">
+                <span class="material-symbols-outlined"
+                    x-text="toast.type === 'success' ? 'check_circle' : (toast.type === 'error' ? 'error' : 'info')"></span>
+                <span class="font-semibold text-sm" x-text="toast.message"></span>
+            </div>
+        </template>
+    </div>
+
+    <!-- Layout Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+
+        <!-- Main Column (Left/8 Columns) -->
+        <div class="lg:col-span-8 space-y-6">
+
+            <!-- Step 1: Crop Selection Card -->
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 space-y-3">
+                <div>
+                    <h3 class="text-base font-bold text-gray-800 flex items-center gap-2">
+                        <span>🌱</span>
+                        Select Supported Crop
+                    </h3>
+                    <p class="text-xs text-gray-500 mt-1">
+                        Choose the crop that matches the uploaded leaf image. Only the crops below are currently supported by the AI model.
+                    </p>
+                </div>
+
+                <div class="crop-selector-grid">
+                    <template x-for="crop in crops" :key="crop.name">
+                        <button @click="selectedCrop = crop.name; addToast('Selected crop: ' + crop.name, 'success')"
+                            class="crop-card"
+                            :class="selectedCrop === crop.name ? 'crop-card-selected' : ''"
+                            :aria-label="'Select ' + crop.name"
+                            :aria-pressed="selectedCrop === crop.name">
+
+                            <!-- Checkmark on selected crop -->
+                            <span x-show="selectedCrop === crop.name"
+                                class="crop-checkmark">
+                                ✓
+                            </span>
+
+                            <span class="crop-icon" x-text="crop.icon"></span>
+                            <span class="crop-name" x-text="crop.name"></span>
+                        </button>
+                    </template>
+                </div>
+
+                <!-- Information Banner -->
+                <div
+                    class="flex gap-3 p-3.5 bg-blue-50 border border-blue-100 rounded-xl text-xs text-blue-900 leading-relaxed">
+                    <span class="material-symbols-outlined text-blue-700 text-lg select-none">info</span>
+                    <div>
+                        <p class="font-bold text-blue-950 mb-0.5">AI Model Coverage</p>
+                        <p>This AI model currently supports disease detection for 14 crop types covering 38 disease and
+                            healthy classes.</p>
+                        <p class="mt-1 font-semibold text-blue-850">Uploading images of crops outside this list may
+                            produce inaccurate predictions.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 2: Upload Zone / Live Camera Frame / Preview -->
+            <div
+                class="bg-white/90 backdrop-blur-md rounded-2xl shadow-md border border-gray-100 p-6 flex flex-col min-h-[300px] justify-between relative overflow-hidden">
+
+                <!-- State: Default Drop/Upload View -->
+                <div x-show="!imageSrc && !showCamera" @dragover="handleDragOver" @drop="handleDrop"
+                    class="w-full flex-1 border-2 border-dashed border-emerald-800/30 rounded-xl flex flex-col items-center justify-center p-8 cursor-pointer hover:bg-emerald-50/30 hover:border-[#0f5238]/60 transition group"
+                    @click="triggerFileInput">
+                    <span
+                        class="material-symbols-outlined text-6xl text-[#0f5238]/40 mb-4 group-hover:scale-110 transition duration-300">psychiatry</span>
+                    <h3 class="text-xl font-bold text-gray-800 mb-2">Upload Crop Image</h3>
+                    <p class="text-gray-500 text-sm text-center mb-6 max-w-sm">Drag and drop your leaf/crop photo here,
+                        or click to upload. Supports JPG, PNG (Max 10MB)</p>
+
+                    <div class="flex flex-wrap gap-4 justify-center" @click.stop>
+                        <button @click="triggerFileInput"
+                            class="bg-[#0f5238] hover:bg-[#0c402c] text-white px-6 py-3 rounded-full font-semibold flex items-center gap-2 shadow-md hover:shadow-lg transition">
+                            <span class="material-symbols-outlined text-lg">upload</span>
+                            Browse Files
+                        </button>
+                        <button @click="startCamera()"
+                            class="bg-[#ff850d] hover:bg-[#e07205] text-white px-6 py-3 rounded-full font-semibold flex items-center gap-2 shadow-md hover:shadow-lg transition">
+                            <span class="material-symbols-outlined text-lg">photo_camera</span>
+                            Camera Capture
+                        </button>
+                    </div>
+                    <input type="file" x-ref="fileInput" @change="handleFileChange" accept="image/*" class="hidden" />
+                </div>
+
+                <!-- State: Live Camera View -->
+                <div x-show="showCamera"
+                    class="w-full flex-1 flex flex-col items-center justify-center bg-gray-900 rounded-xl p-4 min-h-[280px] relative">
+                    <div
+                        class="absolute top-4 left-4 z-10 flex items-center gap-2 bg-black/60 text-white px-3 py-1 rounded-full text-xs">
+                        <span class="w-2 h-2 rounded-full bg-red-600 animate-ping"></span>
+                        <span>Camera Mode</span>
+                    </div>
+
+                    <div class="w-full max-w-md aspect-video bg-black rounded-lg overflow-hidden relative shadow-inner">
+                        <video x-ref="video" autoplay playsinline
+                            class="w-full h-full object-cover transform scale-x-[-1]"></video>
+                        <div x-show="!cameraStream"
+                            class="absolute inset-0 flex flex-col items-center justify-center text-gray-400 p-6 text-center">
+                            <span
+                                class="material-symbols-outlined text-5xl mb-2 animate-pulse text-[#ff850d]">videocam_off</span>
+                            <p class="text-sm font-semibold text-white">Camera stream simulation active</p>
+                            <p class="text-xs text-gray-500 mt-1">Snap photo to generate a mock crop disease specimen
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="flex gap-4 mt-6">
+                        <button @click="capturePhoto()"
+                            class="bg-[#ff850d] hover:bg-[#e07205] text-white px-6 py-2.5 rounded-full font-semibold flex items-center gap-2 transition shadow-md">
+                            <span class="material-symbols-outlined">photo_camera</span>
+                            Snap Photo
+                        </button>
+                        <button @click="stopCamera()"
+                            class="bg-white/10 hover:bg-white/20 text-white px-6 py-2.5 rounded-full font-semibold transition border border-white/20">
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+
+                <!-- State: Image Selected & Ready for Analysis (Upload container remains showing this when results appear below) -->
+                <div x-show="imageSrc && !showCamera"
+                    class="w-full flex-1 flex flex-col items-center justify-center p-4">
+                    <div
+                        class="relative w-full max-w-md aspect-video rounded-xl overflow-hidden shadow-md bg-gray-50 border border-gray-200">
+                        <img :src="imageSrc" alt="Crop Preview" class="w-full h-full object-cover" />
+                        <div
+                            class="absolute bottom-2 left-2 bg-black/60 backdrop-blur-md px-3 py-1 rounded-lg text-white text-xs">
+                            <span x-text="fileName"></span> (<span x-text="fileSize"></span>)
+                        </div>
+                        <div x-show="isAnalyzing" class="scanning-line"></div>
+                    </div>
+                    <div class="flex gap-4 mt-6">
+                        <button @click="startAnalysis()" :disabled="isAnalyzing"
+                            class="bg-[#0f5238] hover:bg-[#0c402c] text-white px-8 py-3 rounded-full font-semibold flex items-center gap-2 shadow-lg transition disabled:opacity-50 disabled:cursor-not-allowed">
+                            <span class="material-symbols-outlined" :class="isAnalyzing ? 'animate-spin' : ''"
+                                x-text="isAnalyzing ? 'sync' : 'psychiatry'"></span>
+                            <span x-text="isAnalyzing ? 'Analyzing...' : 'Start AI Diagnosis'"></span>
+                        </button>
+                        <button @click="resetAll()" :disabled="isAnalyzing"
+                            class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-6 py-3 rounded-full font-semibold transition disabled:opacity-50">
+                            Reset
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Section: AI Analysis Results (Separate Bottom Container) -->
+            <div class="space-y-4 pt-4">
+                <h3 class="text-xl font-extrabold text-gray-800 flex items-center gap-2">
+                    <span class="material-symbols-outlined text-[#0f5238]">analytics</span>
+                    AI Analysis Results
+                </h3>
+
+                <!-- Sub-State: Empty State -->
+                <div x-show="!isAnalyzing && !analysisResult" x-transition:enter="transition ease-out duration-300"
+                    x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
+                    class="bg-white/80 border border-dashed border-gray-200 rounded-xl p-12 flex flex-col items-center justify-center text-center text-gray-400 shadow-sm">
+                    <span class="material-symbols-outlined text-5xl text-gray-300 mb-3">image_search</span>
+                    <p class="text-sm font-semibold max-w-sm">Upload a crop image to view AI-powered disease analysis
+                        results.</p>
+                </div>
+
+                <!-- Sub-State: Loading State -->
+                <div x-show="isAnalyzing" x-cloak x-transition:enter="transition ease-out duration-300"
+                    x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
+                    class="bg-white/90 border border-emerald-100 rounded-xl p-8 flex flex-col items-center justify-center text-center shadow-lg space-y-4">
+                    <div class="leaf-spin text-emerald-600">
+                        <span class="material-symbols-outlined text-5xl">eco</span>
+                    </div>
+                    <div>
+                        <h4 class="text-lg font-bold text-gray-800 animate-pulse">Analyzing crop image with AI...</h4>
+                        <p class="text-xs text-gray-500 mt-1" x-text="scanningText()"></p>
+                    </div>
+
+                    <div class="w-full max-w-md">
+                        <div
+                            class="flex justify-between items-center text-[10px] text-gray-400 mb-1 font-semibold uppercase">
+                            <span>Diagnostic Engine</span>
+                            <span x-text="uploadProgress + '%'"></span>
+                        </div>
+                        <div class="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
+                            <div class="bg-gradient-to-r from-emerald-600 to-[#0f5238] h-full transition-all duration-100 ease-out"
+                                :style="'width: ' + uploadProgress + '%'"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sub-State: Active Analysis Results Card -->
+                <div x-show="analysisResult && !isAnalyzing" x-cloak
+                    x-transition:enter="transition ease-out duration-500 transform"
+                    x-transition:enter-start="opacity-0 translate-y-8"
+                    x-transition:enter-end="opacity-100 translate-y-0"
+                    class="bg-white rounded-xl shadow-lg border-2 p-6 transition-all duration-500 relative overflow-hidden"
+                    :class="analysisResult.status === 'Healthy' 
+                         ? 'border-emerald-500/20 shadow-emerald-100/50' 
+                         : (analysisResult.status === 'Unavailable' 
+                             ? 'border-gray-500/20 shadow-gray-100/50' 
+                             : 'border-red-500/20 shadow-red-100/50')">
+
+                    <div class="flex flex-col md:flex-row gap-6">
+                        <!-- Left: Crop Preview Image Inside Result Card -->
+                        <div
+                            class="w-full md:w-1/3 aspect-video md:aspect-square rounded-lg overflow-hidden border border-gray-200 bg-gray-50 relative shadow-sm">
+                            <img :src="imageSrc" alt="Analyzed Specimen" class="w-full h-full object-cover" />
+                            <div
+                                class="absolute bottom-2 right-2 bg-black/60 text-white px-2.5 py-0.5 rounded text-[10px] uppercase font-bold tracking-wider">
+                                Specimen
+                            </div>
+                        </div>
+
+                        <!-- Right: Diagnostic Details -->
+                        <div class="w-full md:w-2/3 flex flex-col justify-between space-y-4">
+                            <div>
+                                <!-- AI Status Badge -->
+                                <div class="flex flex-wrap items-center gap-2 mb-3">
+                                    <span
+                                        class="text-xs px-2.5 py-1 rounded-full font-bold uppercase border tracking-wider shadow-sm"
+                                        :class="analysisResult.status === 'Healthy' 
+                                               ? 'bg-emerald-50 text-emerald-800 border-emerald-200' 
+                                               : (analysisResult.status === 'Unavailable' 
+                                                   ? 'bg-gray-50 text-gray-800 border-gray-200' 
+                                                   : 'bg-red-50 text-red-800 border-red-200')"
+                                        x-text="analysisResult.status">
+                                    </span>
+                                </div>
+
+                                <!-- Crop & Prediction Details -->
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <p
+                                            class="text-[10px] text-gray-400 font-bold uppercase tracking-wider font-semibold">
+                                            Selected Crop</p>
+                                        <p class="text-lg font-bold text-gray-800 flex items-center gap-1.5 mt-0.5">
+                                            <span x-text="crops.find(c => c.name === selectedCrop)?.icon"></span>
+                                            <span x-text="selectedCrop"></span>
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <p
+                                            class="text-[10px] text-gray-400 font-bold uppercase tracking-wider font-semibold">
+                                            Prediction</p>
+                                        <h2 class="text-lg font-extrabold text-gray-850 mt-0.5"
+                                            x-text="analysisResult.disease"></h2>
+                                        <p class="text-xs text-gray-450 italic mt-0.5"
+                                            x-text="crops.find(c => c.name === selectedCrop)?.scientific"></p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-4 pt-2 border-t border-gray-100">
+                                <!-- Confidence Score Block -->
+                                <div class="bg-gray-50 rounded-xl p-3 border border-gray-100">
+                                    <p
+                                        class="text-[10px] text-gray-400 font-bold uppercase tracking-wider font-semibold">
+                                        Confidence</p>
+                                    <p class="text-xl font-extrabold text-[#0f5238] mt-0.5"
+                                        x-text="analysisResult.confidence + '%'"></p>
+                                    <div class="w-full bg-gray-200 h-1.5 rounded-full overflow-hidden mt-1.5">
+                                        <div class="bg-emerald-600 h-full"
+                                            :style="'width: ' + analysisResult.confidence + '%'"></div>
+                                    </div>
+                                </div>
+
+                                <!-- Severity Level Block -->
+                                <div class="bg-gray-50 rounded-xl p-3 border border-gray-100">
+                                    <p
+                                        class="text-[10px] text-gray-400 font-bold uppercase tracking-wider font-semibold">
+                                        Severity Level</p>
+                                    <p class="text-xl font-extrabold mt-0.5"
+                                        :class="analysisResult.status === 'Healthy' ? 'text-emerald-700' : (analysisResult.status === 'Unavailable' ? 'text-gray-700' : 'text-red-700')"
+                                        x-text="analysisResult.severity">
+                                    </p>
+                                    <div class="w-full bg-gray-200 h-1.5 rounded-full overflow-hidden mt-1.5">
+                                        <div class="h-full"
+                                            :class="analysisResult.status === 'Healthy' ? 'bg-emerald-600' : (analysisResult.status === 'Unavailable' ? 'bg-gray-400' : 'bg-red-500')"
+                                            :style="'width: ' + analysisResult.severityVal + '%'"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Recommendation Segmented Tabs -->
+                    <div class="bg-gray-50/50 rounded-xl border border-gray-100 mt-6 overflow-hidden">
+                        <div class="flex bg-gray-100/50 border-b border-gray-200">
+                            <button @click="activeTab = 'treatment'"
+                                class="flex-1 py-3 text-xs font-bold text-center border-b-2 transition" :class="activeTab === 'treatment' 
+                                         ? 'border-[#0f5238] text-[#0f5238]' 
+                                         : 'border-transparent text-gray-500 hover:text-gray-800'">
+                                <span class="flex justify-center items-center gap-1.5">
+                                    <span class="material-symbols-outlined text-sm">healing</span>
+                                    Treatment
+                                </span>
+                            </button>
+                            <button @click="activeTab = 'fertilizer'"
+                                class="flex-1 py-3 text-xs font-bold text-center border-b-2 transition" :class="activeTab === 'fertilizer' 
+                                         ? 'border-[#0f5238] text-[#0f5238]' 
+                                         : 'border-transparent text-gray-500 hover:text-gray-800'">
+                                <span class="flex justify-center items-center gap-1.5">
+                                    <span class="material-symbols-outlined text-sm">filter_alt</span>
+                                    Fertilizer
+                                </span>
+                            </button>
+                            <button @click="activeTab = 'prevention'"
+                                class="flex-1 py-3 text-xs font-bold text-center border-b-2 transition" :class="activeTab === 'prevention' 
+                                         ? 'border-[#0f5238] text-[#0f5238]' 
+                                         : 'border-transparent text-gray-500 hover:text-gray-800'">
+                                <span class="flex justify-center items-center gap-1.5">
+                                    <span class="material-symbols-outlined text-sm">shield</span>
+                                    Prevention
+                                </span>
+                            </button>
+                        </div>
+
+                        <!-- Tab Contents -->
+                        <div class="p-5 text-sm text-gray-600 leading-relaxed bg-white">
+                            <div x-show="activeTab === 'treatment'">
+                                <h4 class="font-bold text-gray-800 mb-1.5 text-[#0f5238] flex items-center gap-1">
+                                    <span class="material-symbols-outlined text-base">medical_services</span>
+                                    Treatment Recommendations
+                                </h4>
+                                <p x-text="analysisResult.treatment"></p>
+                            </div>
+                            <div x-show="activeTab === 'fertilizer'">
+                                <h4 class="font-bold text-gray-800 mb-1.5 text-[#0f5238] flex items-center gap-1">
+                                    <span class="material-symbols-outlined text-base">grass</span>
+                                    Suggested Nutrition Program
+                                </h4>
+                                <p x-text="analysisResult.fertilizer"></p>
+                            </div>
+                            <div x-show="activeTab === 'prevention'">
+                                <h4 class="font-bold text-gray-800 mb-1.5 text-[#0f5238] flex items-center gap-1">
+                                    <span class="material-symbols-outlined text-base">policy</span>
+                                    Long-term Preventive Actions
+                                </h4>
+                                <p x-text="analysisResult.prevention"></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons Inside Result Card -->
+                    <div class="flex flex-wrap justify-end gap-3 mt-6 pt-4 border-t border-gray-100">
+                        <button @click="downloadPDF()" :disabled="isGeneratingPDF"
+                            class="bg-[#0f5238] hover:bg-[#0c402c] text-white px-5 py-2.5 rounded-lg text-xs font-bold flex items-center gap-1.5 shadow-sm transition disabled:opacity-50">
+                            <span class="material-symbols-outlined text-sm"
+                                x-text="isGeneratingPDF ? 'sync' : 'download'"></span>
+                            <span x-text="isGeneratingPDF ? 'Generating...' : 'Download PDF Report'"></span>
+                        </button>
+                        <button @click="resetAll()"
+                            class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-5 py-2.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition">
+                            <span class="material-symbols-outlined text-sm">restart_alt</span>
+                            Analyze Another Image
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar Columns (Right/4 Columns) -->
+        <div class="lg:col-span-4 space-y-6">
+
+            <!-- Widget 1: Expert Tip -->
+            <div class="bg-orange-50/70 border border-orange-200 text-orange-950 rounded-2xl p-6 shadow-sm">
+                <div class="flex items-center gap-3 mb-3">
+                    <span class="material-symbols-outlined text-orange-600 text-2xl font-fill">lightbulb</span>
+                    <h4 class="text-sm font-extrabold uppercase tracking-wider">Expert Tip</h4>
+                </div>
+                <p class="text-xs leading-relaxed text-orange-900">
+                    For optimal diagnostics, frame the leaf flat and central in your camera. Avoid captures under direct
+                    high-glare solar rays or in deep crop shadows to prevent model classification skew.
+                </p>
+            </div>
+
+            <!-- Widget 2: How It Works -->
+            <div class="bg-emerald-50/70 border border-emerald-200 text-emerald-950 rounded-2xl p-6 shadow-sm">
+                <div class="flex items-center gap-3 mb-4">
+                    <span class="material-symbols-outlined text-emerald-700 text-2xl font-bold">info</span>
+                    <h4 class="text-sm font-extrabold text-[#0f5238] uppercase tracking-wider">How It Works</h4>
+                </div>
+                <ul class="space-y-3 text-xs text-emerald-900">
+                    <li class="flex items-start gap-2">
+                        <span
+                            class="material-symbols-outlined text-emerald-700 text-sm font-bold mt-0.5">check_circle</span>
+                        <span>Select the target crop category at the top of the interface.</span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                        <span
+                            class="material-symbols-outlined text-emerald-700 text-sm font-bold mt-0.5">check_circle</span>
+                        <span>Upload an image from your files or snap one via camera.</span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                        <span
+                            class="material-symbols-outlined text-emerald-700 text-sm font-bold mt-0.5">check_circle</span>
+                        <span>The AI runs texture, spot, and lesions diagnostic filters.</span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                        <span
+                            class="material-symbols-outlined text-emerald-700 text-sm font-bold mt-0.5">check_circle</span>
+                        <span>Instantly receive treatment, fertilizer, and prevention cards.</span>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Widget 3: AI Accuracy Tips -->
+            <!-- <div class="bg-blue-50/70 border border-blue-200 text-blue-950 rounded-2xl p-6 shadow-sm">
+                <div class="flex items-center gap-3 mb-3">
+                    <span class="material-symbols-outlined text-blue-700 text-2xl">verified_user</span>
+                    <h4 class="text-sm font-extrabold uppercase tracking-wider text-blue-900">AI Accuracy Guidelines</h4>
+                </div>
+                <div class="space-y-2 text-xs text-blue-800">
+                    <p>✓ Ensure leaf is clean and free of heavy dirt clods.</p>
+                    <p>✓ Hold the lens parallel to leaf blade face.</p>
+                    <p>✓ Maintain a focus distance of 6 to 12 inches.</p>
+                </div>
+            </div> -->
+
+            <!-- Widget 4: Supported Crops -->
+            <!-- <div
+                class="bg-white/90 border border-gray-100 rounded-2xl p-6 shadow-sm space-y-4 hover:shadow-md transition duration-300">
+                <div class="flex items-center gap-3">
+                    <span class="material-symbols-outlined text-green-700 text-2xl">spa</span>
+                    <h4 class="text-sm font-extrabold uppercase tracking-wider text-[#0f5238]">Supported Crops</h4>
+                </div>
+                <p class="text-xs text-gray-500 leading-relaxed">
+                    Our AI model currently detects diseases only for the crop types listed below.
+                </p>
+
+                <!-- Crop Grid -->
+            <!-- <div class="grid grid-cols-2 gap-2 text-xs">
+                    <div
+                        class="flex items-center gap-2 p-2 rounded-xl bg-gray-50/50 border border-gray-100/50 hover:bg-green-50/50 hover:border-green-200 transition duration-200 transform hover:-translate-y-0.5 cursor-default">
+                        <span class="text-base">🍎</span>
+                        <span class="font-bold text-gray-700">Apple</span>
+                    </div>
+                    <div
+                        class="flex items-center gap-2 p-2 rounded-xl bg-gray-50/50 border border-gray-100/50 hover:bg-green-50/50 hover:border-green-200 transition duration-200 transform hover:-translate-y-0.5 cursor-default">
+                        <span class="text-base">🫐</span>
+                        <span class="font-bold text-gray-700">Blueberry</span>
+                    </div>
+                    <div
+                        class="flex items-center gap-2 p-2 rounded-xl bg-gray-50/50 border border-gray-100/50 hover:bg-green-50/50 hover:border-green-200 transition duration-200 transform hover:-translate-y-0.5 cursor-default">
+                        <span class="text-base">🍒</span>
+                        <span class="font-bold text-gray-700">Cherry</span>
+                    </div>
+                    <div
+                        class="flex items-center gap-2 p-2 rounded-xl bg-gray-50/50 border border-gray-100/50 hover:bg-green-50/50 hover:border-green-200 transition duration-200 transform hover:-translate-y-0.5 cursor-default">
+                        <span class="text-base">🌽</span>
+                        <span class="font-bold text-gray-700">Corn (Maize)</span>
+                    </div>
+                    <div
+                        class="flex items-center gap-2 p-2 rounded-xl bg-gray-50/50 border border-gray-100/50 hover:bg-green-50/50 hover:border-green-200 transition duration-200 transform hover:-translate-y-0.5 cursor-default">
+                        <span class="text-base">🍇</span>
+                        <span class="font-bold text-gray-700">Grape</span>
+                    </div>
+                    <div
+                        class="flex items-center gap-2 p-2 rounded-xl bg-gray-50/50 border border-gray-100/50 hover:bg-green-50/50 hover:border-green-200 transition duration-200 transform hover:-translate-y-0.5 cursor-default">
+                        <span class="text-base">🍊</span>
+                        <span class="font-bold text-gray-700">Orange</span>
+                    </div>
+                    <div
+                        class="flex items-center gap-2 p-2 rounded-xl bg-gray-50/50 border border-gray-100/50 hover:bg-green-50/50 hover:border-green-200 transition duration-200 transform hover:-translate-y-0.5 cursor-default">
+                        <span class="text-base">🍑</span>
+                        <span class="font-bold text-gray-700">Peach</span>
+                    </div>
+                    <div
+                        class="flex items-center gap-2 p-2 rounded-xl bg-gray-50/50 border border-gray-100/50 hover:bg-green-50/50 hover:border-green-200 transition duration-200 transform hover:-translate-y-0.5 cursor-default">
+                        <span class="text-base">𫓑</span>
+                        <span class="font-bold text-gray-700">Bell Pepper</span>
+                    </div>
+                    <div
+                        class="flex items-center gap-2 p-2 rounded-xl bg-gray-50/50 border border-gray-100/50 hover:bg-green-50/50 hover:border-green-200 transition duration-200 transform hover:-translate-y-0.5 cursor-default">
+                        <span class="text-base">🥔</span>
+                        <span class="font-bold text-gray-700">Potato</span>
+                    </div>
+                    <div
+                        class="flex items-center gap-2 p-2 rounded-xl bg-gray-50/50 border border-gray-100/50 hover:bg-green-50/50 hover:border-green-200 transition duration-200 transform hover:-translate-y-0.5 cursor-default">
+                        <span class="text-base">🌱</span>
+                        <span class="font-bold text-gray-700">Soybean</span>
+                    </div>
+                    <div
+                        class="flex items-center gap-2 p-2 rounded-xl bg-gray-50/50 border border-gray-100/50 hover:bg-green-50/50 hover:border-green-200 transition duration-200 transform hover:-translate-y-0.5 cursor-default">
+                        <span class="text-base">🌿</span>
+                        <span class="font-bold text-gray-700">Raspberry</span>
+                    </div>
+                    <div
+                        class="flex items-center gap-2 p-2 rounded-xl bg-gray-50/50 border border-gray-100/50 hover:bg-green-50/50 hover:border-green-200 transition duration-200 transform hover:-translate-y-0.5 cursor-default">
+                        <span class="text-base">🎃</span>
+                        <span class="font-bold text-gray-700">Squash</span>
+                    </div>
+                    <div
+                        class="flex items-center gap-2 p-2 rounded-xl bg-gray-50/50 border border-gray-100/50 hover:bg-green-50/50 hover:border-green-200 transition duration-200 transform hover:-translate-y-0.5 cursor-default">
+                        <span class="text-base">🍓</span>
+                        <span class="font-bold text-gray-700">Strawberry</span>
+                    </div>
+                    <div
+                        class="flex items-center gap-2 p-2 rounded-xl bg-gray-50/50 border border-gray-100/50 hover:bg-green-50/50 hover:border-green-200 transition duration-200 transform hover:-translate-y-0.5 cursor-default">
+                        <span class="text-base">🍅</span>
+                        <span class="font-bold text-gray-700">Tomato</span>
+                    </div>
+                </div>
+
+                 Highlight Summary -->
+            <!-- <div class="p-3.5 bg-green-50/80 border border-green-100 rounded-xl space-y-1.5 text-xs text-[#0f5238]">
+                    <div class="flex items-center gap-2">
+                        <span class="text-emerald-600 font-extrabold text-sm">✓</span>
+                        <span class="font-bold">14 Supported Crop Types</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-emerald-600 font-extrabold text-sm">✓</span>
+                        <span class="font-bold">38 Disease & Healthy Classes</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-emerald-600 font-extrabold text-sm">✓</span>
+                        <span class="font-bold">AI-Powered Leaf Disease Detection</span>
+                    </div>
+                </div> -->
+
+            <!-- Warning Box -->
+            <!-- <div class="p-4 bg-orange-50 border border-orange-200 text-orange-950 rounded-xl text-xs space-y-2">
+                    <div class="flex items-center gap-2 text-orange-800 font-bold">
+                        <span class="material-symbols-outlined text-base">warning</span>
+                        <span>Important</span>
+                    </div>
+                    <p class="leading-relaxed">
+                        This AI model currently supports disease detection only for the crops listed above. Uploading
+                        images of unsupported crops may produce inaccurate predictions or low-confidence results.
+                    </p>
+                    <div class="pt-2 border-t border-orange-100">
+                        <p class="font-semibold text-orange-900 mb-1">For the best accuracy:</p>
+                        <ul class="space-y-1 list-disc pl-4 text-orange-850">
+                            <li>Upload a clear image of a single leaf.</li>
+                            <li>Use good lighting.</li>
+                            <li>Avoid blurry images.</li>
+                            <li>Keep the leaf centered in the image.</li>
+                        </ul>
+                    </div> -->
+        </div>
+    </div>
+
+</div>
+
+</div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- jsPDF library loaded via CDN -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+<script>
+    function cropDetector() {
+        return {
+            selectedCrop: 'Tomato',
+            crops: [
+                { name: 'Apple', icon: '🍎', scientific: 'Malus domestica' },
+                { name: 'Blueberry', icon: '🫐', scientific: 'Vaccinium corymbosum' },
+                { name: 'Cherry', icon: '🍒', scientific: 'Prunus avium' },
+                { name: 'Corn (Maize)', icon: '🌽', scientific: 'Zea mays' },
+                { name: 'Grape', icon: '🍇', scientific: 'Vitis vinifera' },
+                { name: 'Orange', icon: '🍊', scientific: 'Citrus sinensis' },
+                { name: 'Peach', icon: '🍑', scientific: 'Prunus persica' },
+                { name: 'Bell Pepper', icon: '𫓑', scientific: 'Capsicum annuum' },
+                { name: 'Potato', icon: '🥔', scientific: 'Solanum tuberosum' },
+                { name: 'Soybean', icon: '🌱', scientific: 'Glycine max' },
+                { name: 'Raspberry', icon: '🌿', scientific: 'Rubus idaeus' },
+                { name: 'Squash', icon: '🎃', scientific: 'Cucurbita pepo' },
+                { name: 'Strawberry', icon: '🍓', scientific: 'Fragaria ananassa' },
+                { name: 'Tomato', icon: '🍅', scientific: 'Solanum lycopersicum' }
+            ],
+            imageSrc: '',
+            fileName: '',
+            fileSize: '',
+            isAnalyzing: false,
+            uploadProgress: 0,
+            scanningStep: 0,
+            activeTab: 'treatment',
+            showCamera: false,
+            cameraStream: null,
+            toasts: [],
+            analysisResult: null,
+            isGeneratingPDF: false,
+
+            scanningText() {
+                const steps = [
+                    'Initializing neural engine...',
+                    'Analyzing leaf structure and color spectrum...',
+                    'Detecting necrotic lesions and spot patterns...',
+                    'Matching traits with agricultural database...',
+                    'Generating treatment and prevention checklist...'
+                ];
+                return steps[this.scanningStep] || 'Processing...';
+            },
+
+            addToast(message, type = 'success') {
+                const id = Date.now();
+                this.toasts.push({ id, message, type });
+                setTimeout(() => {
+                    this.toasts = this.toasts.filter(t => t.id !== id);
+                }, 3000);
+            },
+
+            handleDragOver(e) {
+                e.preventDefault();
+            },
+
+            handleDrop(e) {
+                e.preventDefault();
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    this.loadPhoto(files[0]);
+                }
+            },
+
+            triggerFileInput() {
+                this.$refs.fileInput.click();
+            },
+
+            handleFileChange(e) {
+                const files = e.target.files;
+                if (files.length > 0) {
+                    this.loadPhoto(files[0]);
+                }
+            },
+
+            loadPhoto(file) {
+                if (!file.type.startsWith('image/')) {
+                    this.addToast('Please select a valid image file.', 'error');
+                    return;
+                }
+                this.fileName = file.name;
+                this.fileSize = (file.size / (1024 * 1024)).toFixed(2) + ' MB';
+
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    this.imageSrc = e.target.result;
+                    this.analysisResult = null;
+                    this.addToast('Image uploaded successfully');
+                };
+                reader.readAsDataURL(file);
+            },
+
+            async startCamera() {
+                this.showCamera = true;
+                this.imageSrc = '';
+                this.fileName = '';
+                this.fileSize = '';
+                this.analysisResult = null;
+
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+                    this.cameraStream = stream;
+                    this.$refs.video.srcObject = stream;
+                } catch (err) {
+                    console.warn('Real camera not available, falling back to simulated camera feed:', err);
+                    this.addToast('Using simulated camera view (permission denied or no camera found)', 'info');
+                }
+            },
+
+            stopCamera() {
+                if (this.cameraStream) {
+                    this.cameraStream.getTracks().forEach(track => track.stop());
+                    this.cameraStream = null;
+                }
+                this.showCamera = false;
+            },
+
+            capturePhoto() {
+                if (this.cameraStream) {
+                    const video = this.$refs.video;
+                    const canvas = document.createElement('canvas');
+                    canvas.width = video.videoWidth || 640;
+                    canvas.height = video.videoHeight || 480;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                    this.imageSrc = canvas.toDataURL('image/jpeg');
+                    this.fileName = 'camera_capture_' + Date.now() + '.jpg';
+                    this.fileSize = '0.45 MB';
+                    this.stopCamera();
+                    this.addToast('Image captured successfully');
+                } else {
+                    // No real camera available - show error and close camera mode
+                    this.stopCamera();
+                    this.addToast('Camera not available. Please upload an image instead.', 'error');
+                }
+            },
+
+            async startAnalysis() {
+                if (!this.imageSrc) {
+                    this.addToast('Please upload or capture an image first.', 'error');
+                    return;
+                }
+
+                this.isAnalyzing = true;
+                this.uploadProgress = 0;
+                this.scanningStep = 0;
+                this.analysisResult = null;
+
+                // UI scanning animation promise
+                const animationPromise = (async () => {
+                    const totalSteps = 5;
+                    for (let i = 0; i < totalSteps; i++) {
+                        this.scanningStep = i;
+                        for (let p = 0; p <= 20; p++) {
+                            this.uploadProgress = (i * 20) + p;
+                            await new Promise(r => setTimeout(r, 15 + Math.random() * 15));
+                        }
+                    }
+                })();
+
+                // Backend API call promise
+                const apiPromise = (async () => {
+                    let blob;
+                    if (this.imageSrc.startsWith('data:')) {
+                        const byteString = atob(this.imageSrc.split(',')[1]);
+                        const mimeString = this.imageSrc.split(',')[0].split(':')[1].split(';')[0];
+                        const ab = new ArrayBuffer(byteString.length);
+                        const ia = new Uint8Array(ab);
+                        for (let i = 0; i < byteString.length; i++) {
+                            ia[i] = byteString.charCodeAt(i);
+                        }
+                        blob = new Blob([ab], { type: mimeString });
+                    } else {
+                        blob = await fetch(this.imageSrc).then(r => r.blob());
+                    }
+
+                    const formData = new FormData();
+                    formData.append('image', blob, this.fileName || 'specimen.jpg');
+                    formData.append('crop', this.selectedCrop);
+
+                    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+                    const response = await fetch('/crop-detector/api/diagnose/', {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRFToken': csrfToken
+                        },
+                        body: formData
+                    });
+
+                    if (!response.ok) {
+                        const errData = await response.json().catch(() => ({}));
+                        throw new Error(errData.error || 'Server error: ' + response.status);
+                    }
+
+                    return await response.json();
+                })();
+
+                try {
+                    const [_, result] = await Promise.all([animationPromise, apiPromise]);
+                    this.analysisResult = result;
+                    this.addToast('AI diagnosis complete!', 'success');
+                } catch (err) {
+                    console.error("AI Analysis failed:", err);
+                    this.addToast(err.message || 'AI model analysis failed.', 'error');
+                    this.resetAll();
+                } finally {
+                    this.isAnalyzing = false;
+                }
+            },
+
+            resetAll() {
+                this.imageSrc = '';
+                this.fileName = '';
+                this.fileSize = '';
+                this.isAnalyzing = false;
+                this.uploadProgress = 0;
+                this.analysisResult = null;
+                this.stopCamera();
+            },
+
+            loadPreset(key) {
+                // Preset data removed - integrate a real disease detection model
+            },
+
+            async downloadPDF() {
+                if (this.isGeneratingPDF || !this.analysisResult) return;
+                this.isGeneratingPDF = true;
+                this.addToast('Generating PDF Report...', 'info');
+
+                try {
+                    const { jsPDF } = window.jspdf;
+                    const doc = new jsPDF();
+
+                    // Convert image to Base64 (needed for cross-origin URLs)
+                    let imgData = this.imageSrc;
+                    if (imgData.startsWith('http')) {
+                        try {
+                            imgData = await this.getBase64Image(imgData);
+                        } catch (err) {
+                            console.warn('Failed to convert image to Base64 (CORS/Network), building PDF without image:', err);
+                            imgData = null;
+                        }
+                    }
+
+                    // --- PDF Layout Design ---
+                    // 1. Accent color bar at the top
+                    doc.setFillColor(15, 82, 56); // #0f5238 (Kisan Sathi green)
+                    doc.rect(0, 0, 210, 8, "F");
+
+                    // 2. Branding Header
+                    doc.setFont("helvetica", "bold");
+                    doc.setFontSize(22);
+                    doc.setTextColor(15, 82, 56);
+                    doc.text("Kisan Sathi", 15, 22);
+
+                    doc.setFont("helvetica", "normal");
+                    doc.setFontSize(10);
+                    doc.setTextColor(100, 100, 100);
+                    doc.text("AI-Powered Crop Disease Diagnosis System", 15, 27);
+
+                    const timestamp = new Date().toLocaleString();
+                    doc.text(`Report Date: ${timestamp}`, 195, 22, { align: "right" });
+
+                    // Separator Line
+                    doc.setDrawColor(220, 220, 220);
+                    doc.setLineWidth(0.5);
+                    doc.line(15, 32, 195, 32);
+
+                    // 3. Status Badge and Classification
+                    const status = this.analysisResult.status;
+                    const isHealthy = status === 'Healthy';
+
+                    doc.setFont("helvetica", "bold");
+                    doc.setFontSize(14);
+                    doc.setTextColor(30, 30, 30);
+                    doc.text("Diagnosis Results", 15, 42);
+
+                    // Draw status badge
+                    if (isHealthy) {
+                        doc.setFillColor(209, 250, 229); // light green
+                        doc.rect(15, 47, 30, 8, "F");
+                        doc.setFontSize(10);
+                        doc.setTextColor(6, 95, 70); // dark green
+                        doc.text("HEALTHY", 30, 52.5, { align: "center" });
+                    } else {
+                        doc.setFillColor(254, 226, 226); // light red
+                        doc.rect(15, 47, 30, 8, "F");
+                        doc.setFontSize(10);
+                        doc.setTextColor(153, 27, 27); // dark red
+                        doc.text("DISEASED", 30, 52.5, { align: "center" });
+                    }
+
+                    // Disease title
+                    doc.setFont("helvetica", "bold");
+                    doc.setFontSize(16);
+                    doc.setTextColor(30, 30, 30);
+                    doc.text(this.analysisResult.disease, 50, 53);
+
+                    // Specs below
+                    doc.setFont("helvetica", "normal");
+                    doc.setFontSize(10);
+                    doc.setTextColor(120, 120, 120);
+                    const cropSci = this.crops.find(c => c.name === this.selectedCrop)?.scientific || "";
+                    doc.text(`Crop Type: ${this.selectedCrop} (${cropSci})`, 15, 62);
+                    doc.text(`AI Detection Confidence: ${this.analysisResult.confidence}%`, 15, 67);
+                    doc.text(`Foliage Damage Severity: ${this.analysisResult.severity} (${this.analysisResult.severityVal}%)`, 15, 72);
+
+                    // 4. Image Block
+                    if (imgData) {
+                        try {
+                            doc.setDrawColor(200, 200, 200);
+                            doc.setFillColor(245, 245, 245);
+                            doc.rect(15, 78, 70, 50, "FD");
+                            doc.addImage(imgData, 'JPEG', 16, 79, 68, 48);
+                        } catch (e) {
+                            console.error("Error inserting image into PDF document:", e);
+                        }
+                    } else {
+                        doc.setDrawColor(200, 200, 200);
+                        doc.setFillColor(245, 245, 245);
+                        doc.rect(15, 78, 70, 50, "FD");
+                        doc.setFont("helvetica", "italic");
+                        doc.setFontSize(9);
+                        doc.setTextColor(150, 150, 150);
+                        doc.text("Farmer Crop Leaf Preview", 50, 101, { align: "center" });
+                        doc.text("Image not loadable (CORS)", 50, 106, { align: "center" });
+                    }
+
+                    // 5. Short Summary Paragraph
+                    doc.setFont("helvetica", "bold");
+                    doc.setFontSize(11);
+                    doc.setTextColor(15, 82, 56);
+                    doc.text("AI Diagnosis Summary", 92, 83);
+                    doc.setFont("helvetica", "normal");
+                    doc.setFontSize(9);
+                    doc.setTextColor(80, 80, 80);
+                    const summaryText = isHealthy
+                        ? `The AI scan detected no symptoms of pathology on the ${this.selectedCrop} foliage. The plant tissue shows normal chlorophyll activity and cell density.`
+                        : `The AI neural engine detected diagnostic markers matching ${this.analysisResult.disease} with a confidence score of ${this.analysisResult.confidence}%. The leaf shows a ${this.analysisResult.severity.toLowerCase()} infection level.`;
+                    const summaryLines = doc.splitTextToSize(summaryText, 103);
+                    doc.text(summaryLines, 92, 88);
+
+                    // 6. Detailed Recommendations Sections
+                    let yPos = 135;
+
+                    // Treatment
+                    doc.setDrawColor(230, 230, 230);
+                    doc.line(15, yPos, 195, yPos);
+                    yPos += 7;
+
+                    doc.setFont("helvetica", "bold");
+                    doc.setFontSize(11);
+                    doc.setTextColor(15, 82, 56);
+                    doc.text("Recommended Treatment Plan", 15, yPos);
+                    yPos += 5;
+
+                    doc.setFont("helvetica", "normal");
+                    doc.setFontSize(9.5);
+                    doc.setTextColor(60, 60, 60);
+                    const treatmentLines = doc.splitTextToSize(this.analysisResult.treatment, 180);
+                    doc.text(treatmentLines, 15, yPos);
+                    yPos += treatmentLines.length * 5 + 4;
+
+                    // Fertilizer
+                    doc.line(15, yPos, 195, yPos);
+                    yPos += 7;
+
+                    doc.setFont("helvetica", "bold");
+                    doc.setFontSize(11);
+                    doc.setTextColor(15, 82, 56);
+                    doc.text("Suggested Fertilizer & Nutritional Adjustment", 15, yPos);
+                    yPos += 5;
+
+                    doc.setFont("helvetica", "normal");
+                    doc.setFontSize(9.5);
+                    doc.setTextColor(60, 60, 60);
+                    const fertilizerLines = doc.splitTextToSize(this.analysisResult.fertilizer, 180);
+                    doc.text(fertilizerLines, 15, yPos);
+                    yPos += fertilizerLines.length * 5 + 4;
+
+                    // Prevention
+                    doc.line(15, yPos, 195, yPos);
+                    yPos += 7;
+
+                    doc.setFont("helvetica", "bold");
+                    doc.setFontSize(11);
+                    doc.setTextColor(15, 82, 56);
+                    doc.text("Long-term Preventive Actions", 15, yPos);
+                    yPos += 5;
+
+                    doc.setFont("helvetica", "normal");
+                    doc.setFontSize(9.5);
+                    doc.setTextColor(60, 60, 60);
+                    const preventionLines = doc.splitTextToSize(this.analysisResult.prevention, 180);
+                    doc.text(preventionLines, 15, yPos);
+
+                    // 7. Footer line and details
+                    doc.setDrawColor(220, 220, 220);
+                    doc.line(15, 280, 195, 280);
+                    doc.setFont("helvetica", "italic");
+                    doc.setFontSize(8);
+                    doc.setTextColor(150, 150, 150);
+                    doc.text("Kisan Sathi Smart Farming Platform • support@kisansathi.org • www.kisansathi.org", 105, 286, { align: "center" });
+
+                    doc.save(`kisan_sathi_report_${this.selectedCrop.toLowerCase()}_${Date.now()}.pdf`);
+                    this.addToast('PDF Report downloaded successfully!', 'success');
+                } catch (err) {
+                    console.error("PDF generation error:", err);
+                    this.addToast('Failed to generate PDF Report.', 'error');
+                } finally {
+                    this.isGeneratingPDF = false;
+                }
+            },
+
+            // Convert external image to base64 via canvas
+            getBase64Image(imgUrl) {
+                return new Promise((resolve, reject) => {
+                    const img = new Image();
+                    img.crossOrigin = 'Anonymous';
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        canvas.width = img.width;
+                        canvas.height = img.height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0);
+                        try {
+                            const dataURL = canvas.toDataURL('image/jpeg');
+                            resolve(dataURL);
+                        } catch (e) {
+                            reject(e);
+                        }
+                    };
+                    img.onerror = (e) => reject(e);
+                    img.src = imgUrl;
+                });
+            },
+
+            downloadAnalysisJSON() {
+                if (!this.analysisResult) return;
+                try {
+                    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(this.analysisResult, null, 2));
+                    const downloadAnchor = document.createElement('a');
+                    downloadAnchor.setAttribute("href", dataStr);
+                    downloadAnchor.setAttribute("download", `kisan_sathi_analysis_${this.selectedCrop.toLowerCase()}_${Date.now()}.json`);
+                    document.body.appendChild(downloadAnchor);
+                    downloadAnchor.click();
+                    downloadAnchor.remove();
+                    this.addToast('Analysis raw data downloaded successfully!', 'success');
+                } catch (err) {
+                    this.addToast('Failed to download JSON data.', 'error');
+                }
+            }
+        };
+    }
+</script>
+{% endblock %}

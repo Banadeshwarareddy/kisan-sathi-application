@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kisan Sathi - Smart Farming App</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Be+Vietnam+Pro:wght@400;600;700&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            font-family: 'Be Vietnam Pro', sans-serif;
+        }
+        h1, h2 {
+            font-family: 'Playfair Display', serif;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-green-50 to-emerald-100 min-h-screen">
+    <!-- Top Navigation Bar -->
+    <nav class="bg-white shadow-lg sticky top-0 z-50">
+        <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <span class="text-3xl">🌾</span>
+                <span class="text-2xl font-bold text-green-800">Kisan Sathi</span>
+            </div>
+            <div class="flex gap-4">
+                {% if user.is_authenticated %}
+                    <span class="text-gray-700 py-2 px-4">Welcome, {{ user.username }}!</span>
+                    <a href="/dashboard/" class="bg-green-600 text-white py-2 px-6 rounded-full hover:bg-green-700 transition">Dashboard</a>
+                    <a href="/logout/" class="bg-gray-600 text-white py-2 px-6 rounded-full hover:bg-gray-700 transition">Logout</a>
+                {% else %}
+                    <a href="/login/" class="bg-green-600 text-white py-2 px-6 rounded-full hover:bg-green-700 transition font-semibold">Login</a>
+                    <a href="/signup/" class="bg-emerald-600 text-white py-2 px-6 rounded-full hover:bg-emerald-700 transition font-semibold">Sign Up</a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mx-auto px-4 py-12">
+        <header class="text-center mb-16">
+            <h1 class="text-6xl font-bold text-green-800 mb-4">🌾 Kisan Sathi</h1>
+            <h2 class="text-3xl text-gray-700 mb-4">Smart Farming Application</h2>
+            <p class="text-lg text-gray-600 mb-8">Empowering farmers with AI-powered agricultural intelligence</p>
+            
+            {% if not user.is_authenticated %}
+            <div class="flex gap-4 justify-center">
+                <a href="/signup/" class="bg-green-600 text-white py-4 px-10 rounded-full hover:bg-green-700 transition text-xl font-bold shadow-lg transform hover:scale-105">
+                    Get Started Free
+                </a>
+                <a href="/login/" class="bg-white text-green-600 py-4 px-10 rounded-full hover:bg-gray-50 transition text-xl font-bold shadow-lg border-2 border-green-600 transform hover:scale-105">
+                    Login
+                </a>
+            </div>
+            {% endif %}
+        </header>
+        
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-7xl mx-auto mb-12">
+            <a href="/dashboard/" class="group block p-8 bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all transform hover:-translate-y-2">
+                <div class="flex items-center justify-center w-16 h-16 bg-green-100 rounded-full mb-4 group-hover:bg-green-200 transition">
+                    <span class="material-symbols-outlined text-4xl text-green-700">dashboard</span>
+                </div>
+                <h3 class="text-2xl font-bold text-green-700 mb-3">📊 Dashboard</h3>
+                <p class="text-gray-600">View comprehensive farm analytics, weather updates, and real-time insights</p>
+            </a>
+            <a href="/disease-detector/" class="group block p-8 bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all transform hover:-translate-y-2">
+                <div class="flex items-center justify-center w-16 h-16 bg-red-100 rounded-full mb-4 group-hover:bg-red-200 transition">
+                    <span class="material-symbols-outlined text-4xl text-red-700">psychiatry</span>
+                </div>
+                <h3 class="text-2xl font-bold text-green-700 mb-3">🔬 Disease Detector</h3>
+                <p class="text-gray-600">Detect crop diseases instantly using advanced computer vision AI</p>
+            </a>
+            
+            <a href="/weather/" class="group block p-8 bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all transform hover:-translate-y-2">
+                <div class="flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-4 group-hover:bg-blue-200 transition">
+                    <span class="material-symbols-outlined text-4xl text-blue-700">sunny</span>
+                </div>
+                <h3 class="text-2xl font-bold text-green-700 mb-3">🌤️ Weather Forecast</h3>
+                <p class="text-gray-600">Get detailed weather analysis and agricultural impact predictions</p>
+            </a>
+            
+            <a href="/chatbot/" class="group block p-8 bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all transform hover:-translate-y-2">
+                <div class="flex items-center justify-center w-16 h-16 bg-purple-100 rounded-full mb-4 group-hover:bg-purple-200 transition">
+                    <span class="material-symbols-outlined text-4xl text-purple-700">smart_toy</span>
+                </div>
+                <h3 class="text-2xl font-bold text-green-700 mb-3">💬 AI Chatbot</h3>
+                <p class="text-gray-600">Get instant farming advice from our intelligent AI assistant</p>
+            </a>
+            
+            <a href="/admin/" class="group block p-8 bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all transform hover:-translate-y-2">
+                <div class="flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mb-4 group-hover:bg-gray-200 transition">
+                    <span class="material-symbols-outlined text-4xl text-gray-700">settings</span>
+                </div>
+                <h3 class="text-2xl font-bold text-green-700 mb-3">⚙️ Admin Panel</h3>
+                <p class="text-gray-600">Manage users, data, and system configuration</p>
+            </a>
+        </div>
+        
+        <div class="max-w-4xl mx-auto bg-white rounded-2xl shadow-xl p-8 mb-12">
+            <h3 class="text-2xl font-bold text-green-800 mb-6 text-center">🚀 System Status</h3>
+            <div class="grid md:grid-cols-3 gap-6">
+                <div class="text-center p-4 bg-green-50 rounded-lg">
+                    <div class="text-3xl font-bold text-green-600 mb-2">✓</div>
+                    <p class="text-sm text-gray-600">Django Backend</p>
+                    <p class="text-xs text-green-600 font-semibold">Running</p>
+                </div>
+                <div class="text-center p-4 bg-blue-50 rounded-lg">
+                    <div class="text-3xl font-bold text-blue-600 mb-2">✓</div>
+                    <p class="text-sm text-gray-600">Database</p>
+                    <p class="text-xs text-blue-600 font-semibold">Connected</p>
+                </div>
+                <div class="text-center p-4 bg-purple-50 rounded-lg">
+                    <div class="text-3xl font-bold text-purple-600 mb-2">✓</div>
+                    <p class="text-sm text-gray-600">AI Services</p>
+                    <p class="text-xs text-purple-600 font-semibold">Ready</p>
+                </div>
+            </div>
+        </div>
+        
+        <footer class="text-center text-gray-600 mt-16">
+            <p class="text-lg mb-2">Server: <span class="text-green-600 font-bold">http://127.0.0.1:8000</span></p>
+            <p class="text-sm">© 2024 Kisan Sathi. All rights reserved.</p>
+        </footer>
+    </div>
+</body>
+</html>

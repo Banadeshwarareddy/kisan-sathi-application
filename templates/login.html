@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login | Kisan Sathi</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Be+Vietnam+Pro:wght@400;600;700&display=swap" rel="stylesheet"/>
+</head>
+<body class="bg-gradient-to-br from-green-50 to-emerald-100 min-h-screen flex items-center justify-center">
+    <div class="max-w-md w-full mx-4">
+        <div class="bg-white rounded-2xl shadow-2xl p-8">
+            <div class="text-center mb-8">
+                <h1 class="text-4xl font-bold text-green-800 mb-2" style="font-family: 'Playfair Display', serif;">🌾 Kisan Sathi</h1>
+                <p class="text-gray-600">Welcome back! Login to your account</p>
+            </div>
+
+            {% if messages %}
+                {% for message in messages %}
+                <div class="mb-4 p-4 rounded-lg {% if message.tags == 'error' %}bg-red-100 text-red-700{% else %}bg-green-100 text-green-700{% endif %}">
+                    {{ message }}
+                </div>
+                {% endfor %}
+            {% endif %}
+
+            <form method="POST" action="/login/">
+                {% csrf_token %}
+                <div class="mb-6">
+                    <label class="block text-gray-700 font-semibold mb-2">Username</label>
+                    <input type="text" name="username" required 
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                           placeholder="Enter your username">
+                </div>
+
+                <div class="mb-6">
+                    <label class="block text-gray-700 font-semibold mb-2">Password</label>
+                    <input type="password" name="password" required 
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                           placeholder="Enter your password">
+                </div>
+
+                <button type="submit" 
+                        class="w-full bg-green-600 text-white py-3 rounded-lg font-semibold hover:bg-green-700 transition transform hover:scale-105">
+                    Login
+                </button>
+            </form>
+
+            <div class="mt-6 text-center">
+                <p class="text-gray-600">Don't have an account? 
+                    <a href="/signup/" class="text-green-600 font-semibold hover:underline">Sign Up</a>
+                </p>
+                <a href="/" class="text-gray-500 hover:text-gray-700 text-sm mt-2 inline-block">← Back to Home</a>
+            </div>
+        </div>
+
+        <div class="text-center mt-6 text-gray-600 text-sm">
+            <p>Demo Account: admin / admin123</p>
+        </div>
+    </div>
+</body>
+</html>

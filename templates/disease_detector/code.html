@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Disease Detector | Kisan Sathi</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&amp;family=Be+Vietnam+Pro:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "surface-bright": "#e8fff0",
+                      "inverse-primary": "#95d4b3",
+                      "surface-container-low": "#d1fee5",
+                      "tertiary-container": "#7d5800",
+                      "outline-variant": "#bfc9c1",
+                      "secondary-container": "#ff850d",
+                      "inverse-on-surface": "#cffbe2",
+                      "secondary": "#954a00",
+                      "secondary-fixed": "#ffdcc6",
+                      "primary-container": "#2d6a4f",
+                      "surface-container-high": "#c6f2da",
+                      "tertiary-fixed-dim": "#f9bc47",
+                      "on-tertiary-container": "#ffd388",
+                      "surface-dim": "#b8e4cc",
+                      "on-background": "#002114",
+                      "surface": "#e8fff0",
+                      "secondary-fixed-dim": "#ffb784",
+                      "outline": "#707973",
+                      "on-primary-fixed-variant": "#0e5138",
+                      "on-tertiary": "#ffffff",
+                      "on-secondary": "#ffffff",
+                      "on-tertiary-fixed": "#271900",
+                      "on-error": "#ffffff",
+                      "on-secondary-fixed-variant": "#713700",
+                      "background": "#e8fff0",
+                      "surface-container-highest": "#c1ecd4",
+                      "on-surface-variant": "#404943",
+                      "inverse-surface": "#0e3727",
+                      "primary": "#0f5238",
+                      "on-primary-container": "#a8e7c5",
+                      "on-surface": "#002114",
+                      "tertiary": "#5f4200",
+                      "primary-fixed-dim": "#95d4b3",
+                      "on-primary-fixed": "#002114",
+                      "on-primary": "#ffffff",
+                      "surface-variant": "#c1ecd4",
+                      "on-error-container": "#93000a",
+                      "tertiary-fixed": "#ffdea9",
+                      "surface-container": "#ccf8df",
+                      "surface-container-lowest": "#ffffff",
+                      "error": "#ba1a1a",
+                      "on-tertiary-fixed-variant": "#5e4100",
+                      "surface-tint": "#2c694e",
+                      "primary-fixed": "#b1f0ce",
+                      "on-secondary-fixed": "#301400",
+                      "error-container": "#ffdad6",
+                      "on-secondary-container": "#602e00"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "sm": "8px",
+                      "xl": "32px",
+                      "md": "16px",
+                      "huge": "64px",
+                      "xxl": "48px",
+                      "lg": "24px",
+                      "xs": "4px"
+              },
+              "fontFamily": {
+                      "button": ["Be Vietnam Pro"],
+                      "headline-3": ["Playfair Display"],
+                      "body-large": ["Be Vietnam Pro"],
+                      "headline-2": ["Playfair Display"],
+                      "headline-1": ["Playfair Display"],
+                      "body-small": ["Be Vietnam Pro"],
+                      "label-bold": ["Be Vietnam Pro"],
+                      "body-medium": ["Be Vietnam Pro"],
+                      "headline-1-mobile": ["Playfair Display"]
+              },
+              "fontSize": {
+                      "button": ["16px", {"lineHeight": "1", "fontWeight": "600"}],
+                      "headline-3": ["28px", {"lineHeight": "1.3", "fontWeight": "600"}],
+                      "body-large": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                      "headline-2": ["36px", {"lineHeight": "1.3", "fontWeight": "600"}],
+                      "headline-1": ["48px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                      "body-small": ["14px", {"lineHeight": "1.4", "fontWeight": "400"}],
+                      "label-bold": ["14px", {"lineHeight": "1.2", "fontWeight": "600"}],
+                      "body-medium": ["16px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                      "headline-1-mobile": ["32px", {"lineHeight": "1.2", "fontWeight": "700"}]
+              }
+            },
+          },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .leaf-spin {
+            animation: rotate-leaf 3s ease-in-out infinite;
+        }
+        @keyframes rotate-leaf {
+            0% { transform: rotate(0deg) scale(1); }
+            50% { transform: rotate(180deg) scale(1.1); }
+            100% { transform: rotate(360deg) scale(1); }
+        }
+        .scanning-line {
+            height: 2px;
+            width: 100%;
+            background: #2d6a4f;
+            position: absolute;
+            top: 0;
+            left: 0;
+            box-shadow: 0 0 15px #2d6a4f;
+            animation: scan 2s linear infinite;
+        }
+        @keyframes scan {
+            0% { top: 0; }
+            100% { top: 100%; }
+        }
+        .bento-grid {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 24px;
+        }
+        #toast-container {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .toast {
+            animation: slideIn 0.3s ease-out forwards;
+        }
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-medium min-h-screen flex flex-col">
+<!-- Toast Container -->
+<div id="toast-container"></div>
+<!-- TopNavBar -->
+<header class="docked full-width top-0 sticky z-40 bg-surface shadow-sm flex justify-between items-center w-full px-lg py-sm">
+<div class="flex items-center gap-md">
+<span class="font-headline-3 text-headline-3 text-primary">Kisan Sathi</span>
+</div>
+<div class="hidden md:flex flex-1 max-w-md mx-xl">
+<div class="relative w-full">
+<span class="material-symbols-outlined absolute left-md top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+<input class="w-full bg-surface-container-highest border-none rounded-full py-sm pl-xl pr-md focus:ring-2 focus:ring-primary" placeholder="Search crops, diseases..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-md">
+<button class="p-sm rounded-full hover:bg-surface-container-high transition-colors">
+<span class="material-symbols-outlined text-primary">dark_mode</span>
+</button>
+<button class="p-sm rounded-full hover:bg-surface-container-high transition-colors">
+<span class="material-symbols-outlined text-primary">notifications</span>
+</button>
+<img alt="Farmer Profile" class="w-10 h-10 rounded-full border-2 border-primary object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAbLMZPbRm3GelXfd3qLQio1jtXL1-FoHiHWCGXzS7k9KnEHm2nsPnZjpE1UldFvn-CCjlUEvwBm_8y0lU-QYfTgFLRtfq5usTf1mtGwOENkUtCm3btSvdN5gkpqkq9yq2_JfWx0bvwf57moJVBO0WQX4imVavdoV4BhpZWRdShfasSj6Kwb6QuFN8cVks6EioptDRac6k2JpFcNme_6by0FpgwIeRojrMa-36_gv_WvxNjvGW8JbAvwHwK7V4v5YxggmJnKYRd7l4V"/>
+</div>
+</header>
+<div class="flex flex-1">
+<!-- SideNavBar -->
+<aside class="hidden md:flex flex-col h-full w-64 bg-surface-container-lowest border-r border-outline-variant py-lg px-md gap-sm sticky top-[72px]">
+<div class="mb-lg px-sm">
+<h2 class="font-headline-3 text-headline-3 text-primary">Kisan Sathi</h2>
+<p class="font-body-small text-body-small text-on-surface-variant">Smart Farming</p>
+</div>
+<nav class="flex flex-col gap-xs flex-1">
+<a class="flex items-center gap-md p-md text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-label-bold text-label-bold">Dashboard</span>
+</a>
+<a class="flex items-center gap-md p-md text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all" href="#">
+<span class="material-symbols-outlined">sunny</span>
+<span class="font-label-bold text-label-bold">Weather</span>
+</a>
+<a class="flex items-center gap-md p-md bg-primary-container text-on-primary-container rounded-lg font-bold" href="#">
+<span class="material-symbols-outlined">psychiatry</span>
+<span class="font-label-bold text-label-bold">Disease Detector</span>
+</a>
+<a class="flex items-center gap-md p-md text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all" href="#">
+<span class="material-symbols-outlined">smart_toy</span>
+<span class="font-label-bold text-label-bold">Chatbot</span>
+</a>
+<a class="flex items-center gap-md p-md text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all" href="#">
+<span class="material-symbols-outlined">agriculture</span>
+<span class="font-label-bold text-label-bold">Farm Management</span>
+</a>
+</nav>
+<div class="pt-lg border-t border-outline-variant flex flex-col gap-xs">
+<a class="flex items-center gap-md p-md text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all" href="#">
+<span class="material-symbols-outlined">person</span>
+<span class="font-label-bold text-label-bold">Profile</span>
+</a>
+<a class="flex items-center gap-md p-md text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-label-bold text-label-bold">Settings</span>
+</a>
+<button class="mt-md w-full bg-primary text-on-primary py-md rounded-xl font-button text-button shadow-sm hover:opacity-90 transition-all">
+                Contact Support
+            </button>
+</div>
+</aside>
+<!-- Main Content -->
+<main class="flex-1 p-lg md:p-huge overflow-y-auto">
+<div class="max-w-6xl mx-auto">
+<header class="mb-xl">
+<h1 class="font-headline-1 text-headline-1 text-primary mb-sm">AI Disease Detector</h1>
+<p class="font-body-large text-body-large text-on-surface-variant">Identify crop ailments instantly with our high-precision neural networks.</p>
+</header>
+<div class="bento-grid">
+<!-- Upload Zone -->
+<section class="col-span-12 lg:col-span-8 bg-surface-container-lowest p-xl rounded-xl shadow-sm border border-outline-variant flex flex-col transition-all hover:shadow-md" id="main-workflow-container">
+<!-- Drop Zone View -->
+<div class="w-full h-full border-2 border-dashed border-primary/30 rounded-lg flex flex-col items-center justify-center p-huge cursor-pointer hover:bg-surface-container-low transition-colors group" id="drop-zone">
+<span class="material-symbols-outlined text-[64px] text-primary/40 mb-lg group-hover:scale-110 transition-transform">psychiatry</span>
+<h3 class="font-headline-3 text-headline-3 text-on-surface mb-sm text-center">Upload an image of your crop to detect diseases</h3>
+<p class="font-body-medium text-on-surface-variant mb-xl text-center">Drag and drop or click to browse files (JPEG, PNG up to 10MB)</p>
+<div class="flex flex-wrap gap-md justify-center">
+<button class="bg-primary text-on-primary px-xl py-md rounded-full font-button text-button flex items-center gap-sm shadow-lg hover:bg-primary-container transition-all" onclick="document.getElementById('file-input').click()">
+<span class="material-symbols-outlined">upload</span>
+                                Browse Files
+                            </button>
+<button class="bg-secondary-container text-on-secondary-container px-xl py-md rounded-full font-button text-button flex items-center gap-sm shadow-sm hover:opacity-90 transition-all">
+<span class="material-symbols-outlined">photo_camera</span>
+                                Camera Capture
+                            </button>
+</div>
+<input accept="image/*" class="hidden" id="file-input" type="file"/>
+</div>
+<!-- Preview View (Hidden by default) -->
+<div class="hidden w-full h-full flex flex-col items-center" id="preview-container">
+<div class="relative w-full max-w-lg aspect-square mb-lg rounded-xl overflow-hidden bg-surface-container shadow-inner">
+<img alt="Preview" class="w-full h-full object-cover" id="image-preview" src=""/>
+<div class="hidden scanning-line" id="scanning-indicator"></div>
+</div>
+<div class="flex gap-md" id="preview-actions">
+<button class="bg-primary text-on-primary px-xl py-md rounded-full font-button text-button flex items-center gap-sm shadow-lg hover:bg-primary-container transition-all" id="analyze-btn">
+<span class="material-symbols-outlined">psychiatry</span>
+                                Analyze Crop
+                            </button>
+<button class="bg-surface-container-high text-on-surface-variant px-xl py-md rounded-full font-button text-button flex items-center gap-sm hover:bg-surface-container-highest transition-all" onclick="resetUpload()">
+<span class="material-symbols-outlined">close</span>
+                                Cancel
+                            </button>
+</div>
+</div>
+</section>
+<!-- Info Card -->
+<aside class="col-span-12 lg:col-span-4 flex flex-col gap-lg">
+<div class="bg-tertiary-fixed text-on-tertiary-fixed-variant p-lg rounded-xl shadow-sm">
+<div class="flex items-center gap-md mb-md">
+<span class="material-symbols-outlined">lightbulb</span>
+<h4 class="font-label-bold text-label-bold uppercase tracking-wider">Expert Tip</h4>
+</div>
+<p class="font-body-medium">For best results, ensure the leaf is well-lit and occupies at least 50% of the frame. Avoid blurry images or high-glare conditions.</p>
+</div>
+<div class="bg-surface-container-high p-lg rounded-xl shadow-sm">
+<h4 class="font-label-bold text-label-bold text-primary mb-md">How it works</h4>
+<ul class="flex flex-col gap-sm">
+<li class="flex items-start gap-sm font-body-small">
+<span class="material-symbols-outlined text-primary text-sm">check_circle</span>
+                                Snap a photo of the affected area.
+                            </li>
+<li class="flex items-start gap-sm font-body-small">
+<span class="material-symbols-outlined text-primary text-sm">check_circle</span>
+                                AI analyzes patterns and textures.
+                            </li>
+<li class="flex items-start gap-sm font-body-small">
+<span class="material-symbols-outlined text-primary text-sm">check_circle</span>
+                                Receive diagnosis and treatment.
+                            </li>
+</ul>
+</div>
+</aside>
+<!-- Loading State (Hidden by default) -->
+<section class="hidden col-span-12 bg-white/60 backdrop-blur-md p-huge rounded-xl border border-outline-variant flex flex-col items-center justify-center" id="loading-state">
+<div class="leaf-spin text-primary mb-lg">
+<span class="material-symbols-outlined text-[80px]">eco</span>
+</div>
+<h2 class="font-headline-2 text-headline-2 text-primary">Analyzing your crop...</h2>
+<p class="font-body-large text-on-surface-variant mt-sm">Running visual diagnostic algorithms</p>
+</section>
+<!-- Results Card (Hidden by default) -->
+<section class="hidden col-span-12 grid grid-cols-1 md:grid-cols-2 gap-xl bg-surface-container-lowest p-xl rounded-xl shadow-lg border border-primary/20" id="results-card">
+<div class="relative overflow-hidden rounded-lg bg-surface-container h-[300px]">
+<img alt="Analyzed Leaf" class="w-full h-full object-cover" id="result-image" src=""/>
+</div>
+<div class="flex flex-col">
+<div class="flex justify-between items-start mb-md">
+<div>
+<span class="inline-block bg-error-container text-on-error-container px-md py-xs rounded-full font-label-bold text-xs mb-sm">HIGH ALERT</span>
+<h2 class="font-headline-2 text-headline-2 text-on-surface" id="result-title">Tomato Late Blight</h2>
+</div>
+<div class="text-right">
+<span class="font-headline-3 text-headline-3 text-primary" id="result-confidence">94.5%</span>
+<p class="font-label-bold text-label-bold text-on-surface-variant uppercase">Confidence</p>
+</div>
+</div>
+<div class="w-full bg-surface-container-high h-2 rounded-full mb-xl overflow-hidden">
+<div class="bg-primary h-full transition-all duration-1000 ease-out" id="confidence-bar" style="width: 0%"></div>
+</div>
+<div class="space-y-lg">
+<div>
+<h4 class="font-label-bold text-label-bold text-primary flex items-center gap-sm mb-xs">
+<span class="material-symbols-outlined text-md">healing</span>
+                                    Treatment Suggestions
+                                </h4>
+<p class="font-body-medium text-on-surface-variant" id="result-treatment">Apply copper-based fungicides. Remove infected debris immediately from the field.</p>
+</div>
+<div>
+<h4 class="font-label-bold text-label-bold text-primary flex items-center gap-sm mb-xs">
+<span class="material-symbols-outlined text-md">shield</span>
+                                    Prevention Tips
+                                </h4>
+<p class="font-body-medium text-on-surface-variant" id="result-prevention">Avoid overhead irrigation. Ensure proper plant spacing for better airflow.</p>
+</div>
+</div>
+<button class="mt-xl bg-primary text-on-primary py-md rounded-xl font-button text-button hover:opacity-90 transition-all" onclick="resetUpload()">
+                            New Detection
+                        </button>
+</div>
+</section>
+<!-- Detection History -->
+<section class="col-span-12 mt-xl">
+<div class="flex items-center justify-between mb-lg">
+<h2 class="font-headline-3 text-headline-3 text-primary">Detection History</h2>
+<button class="text-primary font-label-bold flex items-center gap-sm hover:underline">
+                            View All Reports
+                            <span class="material-symbols-outlined">arrow_forward</span>
+</button>
+</div>
+<div class="bg-surface-container-lowest rounded-xl shadow-sm border border-outline-variant overflow-hidden">
+<table class="w-full text-left">
+<thead class="bg-surface-container border-b border-outline-variant">
+<tr>
+<th class="px-lg py-md font-label-bold text-on-surface-variant uppercase tracking-wider">Crop/Disease</th>
+<th class="px-lg py-md font-label-bold text-on-surface-variant uppercase tracking-wider">Confidence</th>
+<th class="px-lg py-md font-label-bold text-on-surface-variant uppercase tracking-wider">Date</th>
+<th class="px-lg py-md font-label-bold text-on-surface-variant uppercase tracking-wider">Status</th>
+<th class="px-lg py-md"></th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant" id="history-body">
+<tr class="hover:bg-surface-container-low transition-colors cursor-pointer" onclick="showPastReport('Tomato Late Blight', '98.2%', 'Apply copper-based fungicides.', 'Avoid overhead irrigation.', 'https://lh3.googleusercontent.com/aida-public/AB6AXuDPEiiLw_PRmkYXTmPJ9HuOyqFh0I1CjS_7IIIdPMjdVgDNbImk1d-12WdE393hNyZ2HfApzNo7Gh1tqXa-cKA4_WU9d0EYHsZNSAB1J1p7MhNer2Z7jnLK-KgfPLIVd6JN5goH3uWNeh0M-jwwrFEvUpkt0y15lBHsxrT9OivY8Z6CIXfBohfs2GgpnepkdISvRYAQMMFBl0iprduNzrCZEhqjMtGdtyPYPWbqlOENUinMvTwkxUo0HhJmGUf3szihyCqxasTnYTjy')">
+<td class="px-lg py-md">
+<div class="flex items-center gap-md">
+<img alt="Late Blight" class="w-12 h-12 rounded-lg object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDPEiiLw_PRmkYXTmPJ9HuOyqFh0I1CjS_7IIIdPMjdVgDNbImk1d-12WdE393hNyZ2HfApzNo7Gh1tqXa-cKA4_WU9d0EYHsZNSAB1J1p7MhNer2Z7jnLK-KgfPLIVd6JN5goH3uWNeh0M-jwwrFEvUpkt0y15lBHsxrT9OivY8Z6CIXfBohfs2GgpnepkdISvRYAQMMFBl0iprduNzrCZEhqjMtGdtyPYPWbqlOENUinMvTwkxUo0HhJmGUf3szihyCqxasTnYTjy"/>
+<div>
+<p class="font-label-bold text-on-surface">Tomato Late Blight</p>
+<p class="font-body-small text-on-surface-variant">Solanum lycopersicum</p>
+</div>
+</div>
+</td>
+<td class="px-lg py-md font-body-medium">98.2%</td>
+<td class="px-lg py-md font-body-medium">Oct 24, 2023</td>
+<td class="px-lg py-md">
+<span class="bg-emerald-100 text-emerald-800 px-md py-xs rounded-full text-xs font-bold">TREATED</span>
+</td>
+<td class="px-lg py-md text-right">
+<button class="p-sm hover:bg-surface-container-high rounded-full"><span class="material-symbols-outlined text-primary">visibility</span></button>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-low transition-colors cursor-pointer" onclick="showPastReport('Powdery Mildew', '89.4%', 'Spray sulfur or neem oil.', 'Increase ventilation.', 'https://lh3.googleusercontent.com/aida-public/AB6AXuCrYO8h9oskSw062YMP_KC6iEhZcAYviX6vjSIgMaU34hih9QdAWeq7jsdGdZoPwJRfgGYQUw2JIXaiwmQkjaXep_ZIGuyZKFqxF1ZQfeI51RiobHCWCdBlsBpA2yMIycvI2_4hxIub2V7H-Cc4-UWL2-GN1iV8KJliVdfQDTPxDmIPklJa9Sf3bxkfiLhBjyZZB_TtXxuNSeYu6pgTWaQsQRSbDt8HRPu9N9XwvY3Zba-uD0SRQyB5gAFbHBzE0nL0Ppq-7gpdiHeF')">
+<td class="px-lg py-md">
+<div class="flex items-center gap-md">
+<img alt="Powdery Mildew" class="w-12 h-12 rounded-lg object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCrYO8h9oskSw062YMP_KC6iEhZcAYviX6vjSIgMaU34hih9QdAWeq7jsdGdZoPwJRfgGYQUw2JIXaiwmQkjaXep_ZIGuyZKFqxF1ZQfeI51RiobHCWCdBlsBpA2yMIycvI2_4hxIub2V7H-Cc4-UWL2-GN1iV8KJliVdfQDTPxDmIPklJa9Sf3bxkfiLhBjyZZB_TtXxuNSeYu6pgTWaQsQRSbDt8HRPu9N9XwvY3Zba-uD0SRQyB5gAFbHBzE0nL0Ppq-7gpdiHeF"/>
+<div>
+<p class="font-label-bold text-on-surface">Powdery Mildew</p>
+<p class="font-body-small text-on-surface-variant">Cucumis sativus</p>
+</div>
+</div>
+</td>
+<td class="px-lg py-md font-body-medium">89.4%</td>
+<td class="px-lg py-md font-body-medium">Oct 20, 2023</td>
+<td class="px-lg py-md">
+<span class="bg-orange-100 text-orange-800 px-md py-xs rounded-full text-xs font-bold">MONITORING</span>
+</td>
+<td class="px-lg py-md text-right">
+<button class="p-sm hover:bg-surface-container-high rounded-full"><span class="material-symbols-outlined text-primary">visibility</span></button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+</div>
+</div>
+</main>
+</div>
+<!-- Footer -->
+<footer class="w-full mt-auto bg-surface-container-lowest border-t border-outline-variant flex flex-col md:flex-row justify-between items-center w-full px-huge py-xl">
+<div class="flex flex-col gap-xs mb-md md:mb-0">
+<span class="font-headline-3 text-headline-3 text-primary">Kisan Sathi</span>
+<p class="font-body-small text-body-small text-on-surface-variant">© 2024 Kisan Sathi. All rights reserved.</p>
+</div>
+<div class="flex gap-xl">
+<a class="font-label-bold text-label-bold text-on-surface-variant hover:text-primary transition-all" href="#">Privacy Policy</a>
+<a class="font-label-bold text-label-bold text-on-surface-variant hover:text-primary transition-all" href="#">Terms of Service</a>
+<a class="font-label-bold text-label-bold text-on-surface-variant hover:text-primary transition-all" href="#">Help Center</a>
+</div>
+</footer>
+<script>
+    const fileInput = document.getElementById('file-input');
+    const dropZone = document.getElementById('drop-zone');
+    const previewContainer = document.getElementById('preview-container');
+    const imagePreview = document.getElementById('image-preview');
+    const analyzeBtn = document.getElementById('analyze-btn');
+    const loadingState = document.getElementById('loading-state');
+    const resultsCard = document.getElementById('results-card');
+    const scanningIndicator = document.getElementById('scanning-indicator');
+    const mainWorkflowContainer = document.getElementById('main-workflow-container');
+
+    // Drag and drop setup
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, preventDefaults, false);
+    });
+
+    function preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+
+    ['dragenter', 'dragover'].forEach(eventName => {
+        dropZone.addEventListener(eventName, () => dropZone.classList.add('bg-surface-container-low'), false);
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, () => dropZone.classList.remove('bg-surface-container-low'), false);
+    });
+
+    dropZone.addEventListener('drop', (e) => {
+        const dt = e.dataTransfer;
+        const files = dt.files;
+        if (files.length > 0) handleFile(files[0]);
+    });
+
+    fileInput.addEventListener('change', (e) => {
+        if (e.target.files.length > 0) handleFile(e.target.files[0]);
+    });
+
+    function showToast(message, type = 'success') {
+        const container = document.getElementById('toast-container');
+        const toast = document.createElement('div');
+        toast.className = `toast p-md rounded-lg shadow-lg flex items-center gap-md ${type === 'success' ? 'bg-primary text-on-primary' : 'bg-error text-on-error'}`;
+        toast.innerHTML = `
+            <span class="material-symbols-outlined">${type === 'success' ? 'check_circle' : 'error'}</span>
+            <span class="font-label-bold">${message}</span>
+        `;
+        container.appendChild(toast);
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            toast.style.transform = 'translateX(100%)';
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
+    }
+
+    function handleFile(file) {
+        if (!file.type.startsWith('image/')) {
+            showToast('Please upload an image file.', 'error');
+            return;
+        }
+        
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            imagePreview.src = e.target.result;
+            dropZone.classList.add('hidden');
+            previewContainer.classList.remove('hidden');
+            showToast('Image uploaded successfully');
+        };
+        reader.readAsDataURL(file);
+    }
+
+    analyzeBtn.addEventListener('click', async () => {
+        // Step 1: Start scanning animation
+        scanningIndicator.classList.remove('hidden');
+        analyzeBtn.disabled = true;
+        analyzeBtn.innerHTML = '<span class="material-symbols-outlined animate-spin">sync</span> Analyzing...';
+
+        // Simulate thinking delay
+        await new Promise(r => setTimeout(r, 1500));
+
+        // Step 2: Show loading screen
+        mainWorkflowContainer.classList.add('hidden');
+        loadingState.classList.remove('hidden');
+
+        // Step 3: Simulate API POST request
+        try {
+            const response = await simulateAnalysis();
+            
+            // Step 4: Display Results
+            setTimeout(() => {
+                loadingState.classList.add('hidden');
+                resultsCard.classList.remove('hidden');
+                
+                // Populate results
+                document.getElementById('result-image').src = imagePreview.src;
+                document.getElementById('result-title').innerText = response.disease;
+                document.getElementById('result-confidence').innerText = response.confidence + '%';
+                document.getElementById('result-treatment').innerText = response.treatment;
+                document.getElementById('result-prevention').innerText = response.prevention;
+                
+                // Animate progress bar
+                setTimeout(() => {
+                    document.getElementById('confidence-bar').style.width = response.confidence + '%';
+                }, 100);
+
+                showToast('Analysis complete!');
+                resultsCard.scrollIntoView({ behavior: 'smooth' });
+            }, 2000);
+
+        } catch (error) {
+            showToast('Analysis failed. Please try again.', 'error');
+            resetUpload();
+        }
+    });
+
+    function simulateAnalysis() {
+        return new Promise((resolve) => {
+            setTimeout(() => {
+                resolve({
+                    disease: 'Tomato Late Blight',
+                    confidence: 96.8,
+                    treatment: 'Apply copper-based fungicides immediately. Remove and destroy any infected leaves and plants to stop spread.',
+                    prevention: 'Ensure good air circulation between plants. Avoid watering from above to keep foliage dry.'
+                });
+            }, 1000);
+        });
+    }
+
+    function resetUpload() {
+        mainWorkflowContainer.classList.remove('hidden');
+        dropZone.classList.remove('hidden');
+        previewContainer.classList.add('hidden');
+        resultsCard.classList.add('hidden');
+        loadingState.classList.add('hidden');
+        scanningIndicator.classList.add('hidden');
+        fileInput.value = '';
+        analyzeBtn.disabled = false;
+        analyzeBtn.innerHTML = '<span class="material-symbols-outlined">psychiatry</span> Analyze Crop';
+        document.getElementById('confidence-bar').style.width = '0%';
+    }
+
+    function showPastReport(disease, confidence, treatment, prevention, image) {
+        mainWorkflowContainer.classList.add('hidden');
+        resultsCard.classList.remove('hidden');
+        
+        document.getElementById('result-image').src = image;
+        document.getElementById('result-title').innerText = disease;
+        document.getElementById('result-confidence').innerText = confidence;
+        document.getElementById('result-treatment').innerText = treatment;
+        document.getElementById('result-prevention').innerText = prevention;
+        
+        const confValue = parseFloat(confidence);
+        setTimeout(() => {
+            document.getElementById('confidence-bar').style.width = confValue + '%';
+        }, 100);
+        
+        resultsCard.scrollIntoView({ behavior: 'smooth' });
+    }
+</script>
+</body></html>

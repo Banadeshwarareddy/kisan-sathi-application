@@ -1,0 +1,113 @@
+"""
+apps/accounts/models.py
+"""
+from django.db import models
+from django.contrib.auth.models import AbstractUser
+
+class FarmerUser(AbstractUser):
+    phone_number = models.CharField(max_length=15, blank=True)
+    profile_photo = models.ImageField(upload_to='profiles/', null=True, blank=True)
+    state = models.CharField(max_length=100, blank=True)
+    district = models.CharField(max_length=100, blank=True)
+    village = models.CharField(max_length=100, blank=True)
+    farm_size_acres = models.DecimalField(max_digits=10, decimal_places=2, default=0.0)
+    farming_experience_years = models.IntegerField(default=0)
+    preferred_crops = models.JSONField(default=list, blank=True)
+    language_preference = models.CharField(max_length=10, default='en')
+    is_verified = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.username
+
+"""
+apps/farm_management/models.py
+"""
+from django.conf import settings
+
+class Farm(models.Model):
+    farmer = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='farms')
+    name = models.CharField(max_length=255)
+    location = models.CharField(max_length=255)
+    area_acres = models.DecimalField(max_digits=10, decimal_places=2)
+    soil_type = models.CharField(max_length=100)
+    irrigation_type = models.CharField(max_length=100)
+    primary_crop = models.CharField(max_length=100)
+    latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.name} - {self.farmer.username}"
+
+class Crop(models.Model):
+    farm = models.ForeignKey(Farm, on_delete=models.CASCADE, related_name='crops')
+    name = models.CharField(max_length=100)
+    variety = models.CharField(max_length=100)
+    planting_date = models.DateField()
+    expected_harvest = models.DateField()
+    growth_stage = models.CharField(max_length=50)
+    health_status = models.CharField(max_length=50)
+    notes = models.TextField(blank=True)
+
+class FarmActivity(models.Model):
+    farm = models.ForeignKey(Farm, on_delete=models.CASCADE, related_name='activities')
+    activity_type = models.CharField(max_length=100)
+    description = models.TextField()
+    date = models.DateField()
+    cost = models.DecimalField(max_digits=12, decimal_places=2, default=0.0)
+    notes = models.TextField(blank=True)
+
+"""
+apps/weather/models.py
+"""
+class WeatherRecord(models.Model):
+    location = models.CharField(max_length=255, db_index=True)
+    temperature = models.DecimalField(max_digits=5, decimal_places=2)
+    humidity = models.IntegerField()
+    rainfall = models.DecimalField(max_digits=7, decimal_places=2, default=0.0)
+    wind_speed = models.DecimalField(max_digits=5, decimal_places=2)
+    weather_condition = models.CharField(max_length=100)
+    forecast_date = models.DateField()
+    recorded_at = models.DateTimeField(auto_now_add=True)
+
+"""
+apps/crop_disease/models.py
+"""
+class DiseaseDetection(models.Model):
+    farmer = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    crop_image = models.ImageField(upload_to='disease_scans/')
+    predicted_disease = models.CharField(max_length=255)
+    confidence_score = models.DecimalField(max_digits=5, decimal_places=2)
+    crop_type = models.CharField(max_length=100)
+    treatment_suggestion = models.TextField()
+    detected_at = models.DateTimeField(auto_now_add=True)
+
+"""
+apps/soil_analyzer/models.py
+"""
+class SoilAnalysis(models.Model):
+    farm = models.ForeignKey(Farm, on_delete=models.CASCADE)
+    nitrogen = models.DecimalField(max_digits=5, decimal_places=2)
+    phosphorus = models.DecimalField(max_digits=5, decimal_places=2)
+    potassium = models.DecimalField(max_digits=5, decimal_places=2)
+    pH_level = models.DecimalField(max_digits=4, decimal_places=2)
+    moisture_content = models.DecimalField(max_digits=5, decimal_places=2)
+    organic_matter = models.DecimalField(max_digits=5, decimal_places=2)
+    analysis_date = models.DateField(auto_now_add=True)
+    recommendations = models.TextField()
+
+"""
+apps/chatbot/models.py
+"""
+class ChatSession(models.Model):
+    farmer = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    session_id = models.CharField(max_length=100, unique=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+class ChatMessage(models.Model):
+    session = models.ForeignKey(ChatSession, on_delete=models.CASCADE, related_name='messages')
+    role = models.CharField(max_length=20) # user or assistant
+    content = models.TextField()
+    timestamp = models.DateTimeField(auto_now_add=True)

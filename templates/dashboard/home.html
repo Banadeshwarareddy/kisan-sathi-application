@@ -1,0 +1,62 @@
+{% extends 'dashboard/base_dashboard.html' %}
+
+{% block title %}Dashboard - Kisan Sathi{% endblock %}
+
+{% block page_title %}Dashboard{% endblock %}
+{% block page_subtitle %}Welcome back, {{ user.username }}!{% endblock %}
+
+{% block dashboard_content %}
+<!-- Module Cards -->
+<h3 class="text-lg md:text-xl font-bold text-gray-800 mb-4 md:mb-6">Quick Access Modules</h3>
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+
+    <!-- Farm Management -->
+    <a href="{% url 'farm_management:home' %}" class="block bg-gradient-to-br from-teal-500 to-teal-600 p-6 md:p-8 rounded-2xl shadow-lg hover:shadow-2xl transition transform hover:-translate-y-2 text-white">
+        <div class="flex items-center justify-between mb-3 md:mb-4">
+            <span class="material-symbols-outlined text-4xl md:text-5xl">agriculture</span>
+            <span class="bg-white text-teal-600 px-2 md:px-3 py-1 rounded-full text-xs md:text-sm font-bold">Pro</span>
+        </div>
+        <h4 class="text-xl md:text-2xl font-bold mb-1 md:mb-2">Farm Management</h4>
+        <p class="text-teal-100 text-sm md:text-base">Complete farm operations control</p>
+    </a>
+
+    <!-- Weather Module -->
+    <a href="{% url 'weather:home' %}" class="block bg-gradient-to-br from-blue-500 to-blue-600 p-6 md:p-8 rounded-2xl shadow-lg hover:shadow-2xl transition transform hover:-translate-y-2 text-white">
+        <div class="flex items-center justify-between mb-3 md:mb-4">
+            <span class="material-symbols-outlined text-4xl md:text-5xl">sunny</span>
+            <span class="bg-white text-blue-600 px-2 md:px-3 py-1 rounded-full text-xs md:text-sm font-bold">Active</span>
+        </div>
+        <h4 class="text-xl md:text-2xl font-bold mb-1 md:mb-2">Weather Forecast</h4>
+        <p class="text-blue-100 text-sm md:text-base">Real-time weather updates and predictions</p>
+    </a>
+
+    <!-- Disease Detector -->
+    <a href="{% url 'crop_detector:home' %}" class="block bg-gradient-to-br from-red-500 to-red-600 p-6 md:p-8 rounded-2xl shadow-lg hover:shadow-2xl transition transform hover:-translate-y-2 text-white">
+        <div class="flex items-center justify-between mb-3 md:mb-4">
+            <span class="material-symbols-outlined text-4xl md:text-5xl">psychiatry</span>
+            <span class="bg-white text-red-600 px-2 md:px-3 py-1 rounded-full text-xs md:text-sm font-bold">AI</span>
+        </div>
+        <h4 class="text-xl md:text-2xl font-bold mb-1 md:mb-2">Crop Disease Detector</h4>
+        <p class="text-red-100 text-sm md:text-base">AI-powered crop disease identification</p>
+    </a>
+    <!-- AI Chatbot -->
+    <a href="{% url 'chatbot:home' %}" class="block bg-gradient-to-br from-purple-500 to-purple-600 p-6 md:p-8 rounded-2xl shadow-lg hover:shadow-2xl transition transform hover:-translate-y-2 text-white">
+        <div class="flex items-center justify-between mb-3 md:mb-4">
+            <span class="material-symbols-outlined text-4xl md:text-5xl">smart_toy</span>
+            <span class="bg-white text-purple-600 px-2 md:px-3 py-1 rounded-full text-xs md:text-sm font-bold">24/7</span>
+        </div>
+        <h4 class="text-xl md:text-2xl font-bold mb-1 md:mb-2">AI Chatbot</h4>
+        <p class="text-purple-100 text-sm md:text-base">Get instant farming advice</p>
+    </a>
+
+    <!-- Admin Panel -->
+    <a href="/admin/" class="block bg-gradient-to-br from-gray-700 to-gray-800 p-6 md:p-8 rounded-2xl shadow-lg hover:shadow-2xl transition transform hover:-translate-y-2 text-white">
+        <div class="flex items-center justify-between mb-3 md:mb-4">
+            <span class="material-symbols-outlined text-4xl md:text-5xl">settings</span>
+            <span class="bg-white text-gray-700 px-2 md:px-3 py-1 rounded-full text-xs md:text-sm font-bold">Admin</span>
+        </div>
+        <h4 class="text-xl md:text-2xl font-bold mb-1 md:mb-2">Admin Panel</h4>
+        <p class="text-gray-300 text-sm md:text-base">System configuration and management</p>
+    </a>
+</div>
+{% endblock %}

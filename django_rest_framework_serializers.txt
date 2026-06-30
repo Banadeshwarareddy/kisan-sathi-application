@@ -1,0 +1,71 @@
+"""
+apps/accounts/serializers.py
+"""
+from rest_framework import serializers
+from .models import FarmerUser
+
+class FarmerUserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = FarmerUser
+        fields = [
+            'id', 'username', 'email', 'phone_number', 'profile_photo', 
+            'state', 'district', 'village', 'farm_size_acres', 
+            'farming_experience_years', 'preferred_crops', 
+            'language_preference', 'is_verified'
+        ]
+        read_only_fields = ['is_verified']
+
+"""
+apps/farm_management/serializers.py
+"""
+from .models import Farm, Crop, FarmActivity
+
+class CropSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Crop
+        fields = '__all__'
+
+class FarmActivitySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = FarmActivity
+        fields = '__all__'
+
+class FarmSerializer(serializers.ModelSerializer):
+    crops = CropSerializer(many=True, read_only=True)
+    activities = FarmActivitySerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Farm
+        fields = '__all__'
+
+"""
+apps/crop_disease/serializers.py
+"""
+from .models import DiseaseDetection
+
+class DiseaseDetectionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DiseaseDetection
+        fields = '__all__'
+        read_only_fields = ['detected_at', 'confidence_score', 'predicted_disease', 'treatment_suggestion']
+
+"""
+apps/soil_analyzer/serializers.py
+"""
+from .models import SoilAnalysis
+
+class SoilAnalysisSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SoilAnalysis
+        fields = '__all__'
+        read_only_fields = ['analysis_date', 'recommendations']
+
+"""
+apps/weather/serializers.py
+"""
+from .models import WeatherRecord
+
+class WeatherRecordSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = WeatherRecord
+        fields = '__all__'
