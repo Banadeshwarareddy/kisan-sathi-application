@@ -13,12 +13,15 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
 
 SECRET_KEY = env('SECRET_KEY')
-DEBUG = env.bool('DEBUG', default=False)
+# DEBUG = env.bool('DEBUG', default=False)
+DEBUG = True
 # ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=[])
-ALLOWED_HOSTS = env.list(
-    "ALLOWED_HOSTS",
-    default=["127.0.0.1", "localhost"]
-)
+ALLOWED_HOSTS = [
+    "kisan-sathi-application-8.onrender.com",
+    ".onrender.com",
+    "localhost",
+    "127.0.0.1",
+]
 # Application definition
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -153,7 +156,6 @@ if not DEBUG:
 
 
 
-CSRF_TRUSTED_ORIGINS = env.list(
-    "CSRF_TRUSTED_ORIGINS",
-    default=[]
-)
+CSRF_TRUSTED_ORIGINS = [
+    "https://kisan-sathi-application-8.onrender.com",
+]
